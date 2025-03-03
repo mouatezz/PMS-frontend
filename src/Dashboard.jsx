@@ -55,7 +55,7 @@ const Dashboard = () => {
             <Calendar className="h-5 w-5 mr-3" />
             <span>Bookings</span>
           </a>
-          <a href="#" className="flex items-center px-3 py-2 text-gray-400 hover:text-amber-300 rounded-md">
+          <a href="/users" className="flex items-center px-3 py-2 text-gray-400 hover:text-amber-300 rounded-md">
             <Users className="h-5 w-5 mr-3" />
             <span>Users</span>
           </a>
