@@ -31,7 +31,6 @@ const UsersPage = () => {
     role: 'Cleaner'
   });
   
-  // Sample staff data
   const [staff, setStaff] = useState([
     { id: 'USR-1001', name: 'John Smith', email: 'john.smith@example.com', phone: '(555) 123-4567', role: 'Cleaner' },
     { id: 'USR-1002', name: 'Maria Garcia', email: 'maria.g@example.com', phone: '(555) 234-5678', role: 'Maintenance' },
@@ -41,7 +40,6 @@ const UsersPage = () => {
     { id: 'USR-1006', name: 'Emily Wong', email: 'emily.w@example.com', phone: '(555) 678-9012', role: 'Room Service' },
   ]);
   
-  // Sample guests data
   const [guests, setGuests] = useState([
     { id: 'GST-1001', name: 'Alex Johnson', email: 'alex.j@example.com', phone: '(555) 111-2222', bookings: 3, status: 'Active' },
     { id: 'GST-1002', name: 'Sophia Williams', email: 'sophia.w@example.com', phone: '(555) 222-3333', bookings: 1, status: 'Active' },
@@ -73,16 +71,13 @@ const UsersPage = () => {
   const handleCreateUser = (e) => {
     e.preventDefault();
     
-    // Generate a new ID
     const newId = `USR-${1000 + staff.length + 1}`;
     
-    // Add new user to list
     setStaff([...staff, { 
       id: newId, 
       ...newUser 
     }]);
     
-    // Reset form and close modal
     setNewUser({
       name: '',
       email: '',
@@ -100,7 +95,6 @@ const UsersPage = () => {
     }
   };
   
-  // Filter users based on search query and role filter
   const filteredStaff = staff.filter(user => {
     const matchesSearch = 
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -112,7 +106,6 @@ const UsersPage = () => {
     return matchesSearch && matchesRole;
   });
   
-  // Filter guests based on search query and status filter
   const filteredGuests = guests.filter(guest => {
     const matchesSearch = 
       guest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -201,7 +194,6 @@ const UsersPage = () => {
             )}
           </div>
           
-          {/* Tabs */}
           <div className="flex border-b border-gray-700 mb-6">
             <button
               className={`py-2 px-4 font-medium ${activeTab === 'staff' ? 'text-amber-300 border-b-2 border-amber-300' : 'text-gray-400 hover:text-white'}`}

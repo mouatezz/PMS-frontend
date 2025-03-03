@@ -39,7 +39,6 @@ const Authentication = () => {
       return;
     }
 
-    // Mock authentication
     setTimeout(() => {
       setLoading(false);
       window.location.href = '/dashboard';
