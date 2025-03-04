@@ -1,16 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  Building2, 
-  Users, 
-  Calendar, 
-  BarChart3, 
-  Settings, 
-  LogOut, 
-  Menu, 
-  X, 
-  Bell, 
-  Home
-} from 'lucide-react';
+import Sidebar from './SideBar';
+import DataTable from './DataTable';
 
 const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -35,70 +25,43 @@ const Dashboard = () => {
       default: return 'bg-gray-500/20 text-gray-500';
     }
   };
+
+  const bookingColumns = [
+    { 
+      key: 'id', 
+      header: 'ID', 
+      sortable: true,
+      cellClassName: 'text-amber-300' 
+    },
+    { 
+      key: 'guest', 
+      header: 'Guest',
+      cellClassName: 'text-white' 
+    },
+    { 
+      key: 'status', 
+      header: 'Status',
+      renderCell: (booking) => (
+        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(booking.status)}`}>
+          {booking.status}
+        </span>
+      )
+    },
+    { 
+      key: 'amount', 
+      header: 'Amount',
+      cellClassName: 'text-white text-right' 
+    }
+  ];
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex">
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 transition-transform duration-300 ease-in-out bg-gray-900 border-r border-gray-800 flex flex-col`}>
-        <div className="p-4 flex items-center space-x-3 border-b border-gray-800">
-          <Building2 className="h-6 w-6 text-amber-300" />
-          <div>
-            <h1 className="text-lg font-medium text-white">Admin</h1>
-          </div>
-        </div>
-        
-        <nav className="flex-1 px-4 py-4 space-y-1">
-          <a href="#" className="flex items-center px-3 py-2 text-amber-300 bg-gray-800/50 rounded-md">
-            <Home className="h-5 w-5 mr-3" />
-            <span>Dashboard</span>
-          </a>
-          <a href="#" className="flex items-center px-3 py-2 text-gray-400 hover:text-amber-300 rounded-md">
-            <Calendar className="h-5 w-5 mr-3" />
-            <span>Bookings</span>
-          </a>
-          <a href="/users" className="flex items-center px-3 py-2 text-gray-400 hover:text-amber-300 rounded-md">
-            <Users className="h-5 w-5 mr-3" />
-            <span>Users</span>
-          </a>
-          <a href="#" className="flex items-center px-3 py-2 text-gray-400 hover:text-amber-300 rounded-md">
-            <BarChart3 className="h-5 w-5 mr-3" />
-            <span>Reports</span>
-          </a>
-          <a href="#" className="flex items-center px-3 py-2 text-gray-400 hover:text-amber-300 rounded-md">
-            <Settings className="h-5 w-5 mr-3" />
-            <span>Settings</span>
-          </a>
-        </nav>
-        
-        <div className="p-4 border-t border-gray-800">
-          <a href="#" className="flex items-center px-3 py-2 text-gray-400 hover:text-amber-300 rounded-md">
-            <LogOut className="h-5 w-5 mr-3" />
-            <span>Logout</span>
-          </a>
-        </div>
-      </aside>
+      <Sidebar 
+        sidebarOpen={sidebarOpen} 
+        setSidebarOpen={setSidebarOpen} 
+      />
       
       <div className="flex-1 md:ml-64">
-        <header className="bg-gray-900 border-b border-gray-800 p-4">
-          <div className="flex items-center justify-between">
-            <button 
-              onClick={() => setSidebarOpen(!sidebarOpen)} 
-              className="md:hidden p-2 rounded-md bg-gray-800 text-white"
-            >
-              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-            
-            <div className="flex items-center space-x-3">
-              <button className="p-2 rounded-md bg-gray-800 text-white relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-amber-300"></span>
-              </button>
-              <div className="w-8 h-8 rounded-full bg-amber-300 flex items-center justify-center text-gray-900 font-medium">
-                A
-              </div>
-            </div>
-          </div>
-        </header>
-        
         <main className="p-6">
           <h1 className="text-xl font-medium text-white mb-6">Dashboard</h1>
           
@@ -117,30 +80,10 @@ const Dashboard = () => {
               <a href="#" className="text-amber-300 text-sm">View All</a>
             </div>
             
-            <table className="w-full">
-              <thead>
-                <tr className="text-left border-b border-gray-700">
-                  <th className="pb-2 font-medium text-gray-400">ID</th>
-                  <th className="pb-2 font-medium text-gray-400">Guest</th>
-                  <th className="pb-2 font-medium text-gray-400">Status</th>
-                  <th className="pb-2 font-medium text-gray-400 text-right">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentBookings.map((booking, index) => (
-                  <tr key={index} className="border-b border-gray-700">
-                    <td className="py-3 text-amber-300">{booking.id}</td>
-                    <td className="py-3 text-white">{booking.guest}</td>
-                    <td className="py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(booking.status)}`}>
-                        {booking.status}
-                      </span>
-                    </td>
-                    <td className="py-3 text-white text-right">{booking.amount}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <DataTable 
+              columns={bookingColumns} 
+              data={recentBookings} 
+            />
           </div>
           
           <div className="bg-gray-800 rounded-md p-4">
