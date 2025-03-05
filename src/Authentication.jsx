@@ -1,13 +1,21 @@
 import React, { useState } from 'react';
 import { Building2, Key, User, Mail, Lock } from 'lucide-react';
 
+import api from './api';
+import { useNavigate } from 'react-router-dom';
+
+
+
 const Authentication = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
     confirmPassword: '',
-    name: '',
+    fullname : '',
+    email : '',
+    phone: '',
+    role:"admin",
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,7 +23,7 @@ const Authentication = () => {
   const t = {
     login: 'Login',
     register: 'Register',
-    email: 'Email',
+    username: 'Username',
     password: 'Password',
     confirmPassword: 'Confirm Password',
     name: 'Full Name',
@@ -28,28 +36,79 @@ const Authentication = () => {
     createAccount: 'Create a new account'
   };
 
-  const handleSubmit = (e) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
-
-    if (!isLogin && formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
+  
+    if (!isLogin) {
+      if (formData.password !== formData.confirmPassword) {
+        setError('Passwords do not match');
+        setLoading(false);
+        return;
+      } else {
+        try {
+          console.log(formData);
+          const res = await api.post('/backend/register/', {
+            "username": formData.username,
+            "password": formData.password,
+            "fullname": formData.fullname,
+            "email": formData.email,
+            "phone": formData.phone,
+            "role": formData.role,
+            "salary": 1000,
+          });
+          console.log(res);
+          setLoading(false);
+          navigate('/');
+        } catch (err) {
+          console.error(err);
+          if (err.response) {
+            setError(err.response.data.message || 'Registration failed');
+          } else {
+            console.error('Error message:', err.message);
+            setError(err.message);
+          }
+          setLoading(false);
+        }
+      }
+    } else {
+      try {
+        const res = await api.post('/backend/token/', {
+          username: formData.username,
+          password: formData.password,
+        });
+        localStorage.setItem('access', res.data.access);
+        localStorage.setItem('refresh', res.data.refresh);
+        console.log(res.data);
+        console.log(localStorage.getItem('access'));
+        console.log(localStorage.getItem('refresh'));
+        setLoading(false);
+        if (res.data.role === 'admin') {
+            navigate('/'); 
+        } else {
+          setError('You are not authorized to access this page');
+          logout();
+        }
+      } catch (err) {
+        console.error(err);
+        if (err.response) {
+          console.error('Error response:', err.response);
+          setError(err.response.data.message || 'Login failed');
+        } else {
+          console.error('Error message:', err.message);
+          setError(err.message);
+        }
+        setLoading(false);
+      }
     }
-
-    setTimeout(() => {
-      setLoading(false);
-      window.location.href = '/dashboard';
-    }, 1000);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cover bg-center font-['Poppins',sans-serif]" 
          style={{ backgroundImage: `url('/src/assets/imgaes/LoginBackground.jpg')`}}>
       <div className="absolute inset-0 bg-black bg-opacity-50"></div>
-      
       <div className="relative z-10 backdrop-blur-md bg-white/20 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/30">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-2">
@@ -58,11 +117,9 @@ const Authentication = () => {
           <h1 className="text-3xl font-extrabold text-white">PMS</h1>
           <p className="text-amber-200 mt-1 text-sm">Property Management System</p>
         </div>
-        
         <h2 className="text-2xl font-bold text-center text-white mb-6">
           {isLogin ? t.welcomeBack : t.createAccount}
         </h2>
-        
         {error && (
           <div className="bg-red-400/30 backdrop-blur-sm border-l-4 border-red-500 text-white px-4 py-3 rounded mb-6">
             {error}
@@ -81,8 +138,8 @@ const Authentication = () => {
                   type="text"
                   name="name"
                   className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 border border-white/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 transition text-white placeholder-white/60"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={formData.fullname}
+                  onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
                   required={!isLogin}
                   placeholder="Name"
                 />
@@ -91,19 +148,19 @@ const Authentication = () => {
           )}
           
           <div className="mb-5">
-            <label className="block text-white text-sm font-medium mb-1">{t.email}</label>
+            <label className="block text-white text-sm font-medium mb-1">{t.username}</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-amber-300" />
               </div>
               <input
-                type="email"
-                name="email"
+                type="text"
+                name="username"
                 className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 border border-white/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 transition text-white placeholder-white/60"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                value={formData.username}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 required
-                placeholder="Email"
+                placeholder="Username"
               />
             </div>
           </div>
@@ -139,6 +196,45 @@ const Authentication = () => {
                   className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 border border-white/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 transition text-white placeholder-white/60"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required={!isLogin}
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+          )}
+          
+           {!isLogin && (
+            <div className="mb-5">
+              <label className="block text-white text-sm font-medium mb-1">phone number</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Key className="h-5 w-5 text-amber-300" />
+                </div>
+                <input
+                  type="int "
+                  name="phone"
+                  className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 border border-white/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 transition text-white placeholder-white/60"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  required={!isLogin}
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+          )}
+           {!isLogin && (
+            <div className="mb-5">
+              <label className="block text-white text-sm font-medium mb-1">email</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Key className="h-5 w-5 text-amber-300" />
+                </div>
+                <input
+                  type="email"
+                  name="email"
+                  className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 border border-white/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 transition text-white placeholder-white/60"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required={!isLogin}
                   placeholder="••••••••"
                 />

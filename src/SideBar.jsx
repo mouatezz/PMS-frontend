@@ -8,13 +8,13 @@ import {
   Settings, 
   LogOut 
 } from 'lucide-react';
-
+import {logout} from "./utils"
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const menuItems = [
     { 
       icon: Home, 
       label: 'Dashboard', 
-      href: '/dashboard' 
+      href: '/' 
     },
     { 
       icon: Calendar, 
@@ -76,6 +76,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         <a 
           href="#" 
           className="flex items-center px-3 py-2 text-gray-400 hover:text-amber-300 rounded-md"
+          onClick={logout}
         >
           <LogOut className="h-5 w-5 mr-3" />
           <span>Logout</span>
