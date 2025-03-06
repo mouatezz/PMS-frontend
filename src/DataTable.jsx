@@ -43,7 +43,7 @@ const DataTable = ({
               {onDelete && (
                 <td className="py-3 text-white text-right">
                   <button 
-                    onClick={() => onDelete(item.id)}
+                    onClick={() => onDelete(item.username)}
                     className="p-1 text-red-400 hover:text-red-500 hover:bg-gray-700 rounded-full"
                   >
                     <Trash2 className="h-5 w-5" />

@@ -4,7 +4,7 @@ import Dashboard from './Dashboard';
 import { BrowserRouter } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
-import UsersPage from './userspage';
+import UsersPage from './usersPage';
 
   function App() {
     return (
