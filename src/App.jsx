@@ -2,7 +2,7 @@ import React from 'react';
 import Authentication from './Authentication';
 import Dashboard from './Dashboard';
 import UsersPage from './usersPage';
-import RoomsContainer from './assets/Rooms/RoomsContainer';
+import RoomsContainer from './Rooms/RoomsContainer.jsx'
 
 const App = () => {
   const path = window.location.pathname;
