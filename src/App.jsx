@@ -2,6 +2,7 @@ import React from 'react';
 import Authentication from './Authentication';
 import Dashboard from './Dashboard';
 import UsersPage from './usersPage';
+import RoomsContainer from './assets/Rooms/RoomsContainer';
 
 const App = () => {
   const path = window.location.pathname;
@@ -13,9 +14,11 @@ const App = () => {
       return <Dashboard />;
     case '/users':
       return <UsersPage />;
+    case '/rooms':
+      return <RoomsContainer />;
     default:
       window.location.href = '/login';
-      return <div>Redirecting to login...</div>;
+      return null;
   }
 };
 
