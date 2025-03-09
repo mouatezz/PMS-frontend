@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import UsersPage from './usersPage';
-
+import Booking from './booking'
   function App() {
     return (
       <BrowserRouter>
@@ -18,6 +18,10 @@ import UsersPage from './usersPage';
              <ProtectedRoute><UsersPage /></ProtectedRoute>
             }
           />
+          <Route path="/bookings" element={
+           <Booking />
+           }
+         />
           <Route path="/login" element={<Authentication />} />
           <Route path="/register" element={<Authentication />} />
         

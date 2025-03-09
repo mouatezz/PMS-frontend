@@ -182,16 +182,6 @@ const UsersPage = () => {
           {user.role}
         </span>
       )
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      renderCell: (user) => (
-        <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(user.status)}`}>
-          {user.status}
-        </span>
-      ),
-      
     }
   ];
 
@@ -502,6 +492,7 @@ const UsersPage = () => {
             required
             className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
             value={newUser.staffRole}
+            placeholder= "choose staff role"
             onChange={(e) => setNewUser({ ...newUser, staffRole: e.target.value })}
           >
             <option value="maintenance">Maintenance Worker</option>

@@ -27,7 +27,7 @@ const Dashboard = () => {
   };
 
 
-////////////api call ///////////////
+////////////api call /////////////
 
 useEffect(() => {
   const fetchBookings = async () => {
@@ -88,6 +88,11 @@ useEffect(() => {
       header: 'ID', 
       sortable: true,
       cellClassName: 'text-amber-300' 
+    },
+    { 
+      key: 'guest', 
+      header: 'username',
+      cellClassName: 'text-white' 
     },
     { 
       key: 'NationalID', 

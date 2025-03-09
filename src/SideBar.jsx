@@ -19,7 +19,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { 
       icon: Calendar, 
       label: 'Bookings', 
-      href: '#' 
+      href: '/bookings' 
     },
     { 
       icon: Users, 
