@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import Sidebar from '../../SideBar';
+import Sidebar from '../SideBar';
 import RoomList from './RoomList';
 import RoomFilters from './RoomFilters';
 import AddEditRoomModal from './AddEditRoomModal';
