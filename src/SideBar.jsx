@@ -6,7 +6,8 @@ import {
   Users, 
   BarChart3, 
   Settings, 
-  LogOut 
+  LogOut,
+  BedDouble // Added for Rooms icon
 } from 'lucide-react';
 import {logout} from "./utils"
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
@@ -15,6 +16,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       icon: Home, 
       label: 'Dashboard', 
       href: '/' 
+    },
+    { 
+      icon: BedDouble, // Using BedDouble icon for Rooms
+      label: 'Rooms', 
+      href: '/rooms' // Route to Rooms.jsx
     },
     { 
       icon: Calendar, 
