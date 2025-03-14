@@ -54,16 +54,16 @@ const RoomCard = ({ room, onClick }) => {
                   <BedDouble className="w-4 h-4 mr-1" />
                   <span>{room.bed_type}</span>
                 </div>
-                {room.maxOccupancy && (
+                 {room.maxOccupancy && (
                   <div className="flex items-center">
                     <Users className="w-4 h-4 mr-1" />
                     <span>Max {room.maxOccupancy} People</span>
                   </div>
                 )}
               </div>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-white">£{parseFloat(room.price).toFixed(2)}</div>
+             </div>
+             <div className="text-right">
+              <div className="text-2xl font-bold text-white">{parseFloat(room.price).toFixed(2)} DA</div>
               <p className="text-sm text-gray-400">per night</p>
             </div>
           </div>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { X, Plus, Trash2, Upload } from 'lucide-react';
-
+import api from '../api.js'
 if (typeof window !== 'undefined') {
   Modal.setAppElement('#root');
 }
+import fetchRooms from './RoomsContainer.jsx'
 
 const ROOM_TYPES = [
   { value: 'standard', label: 'Standard' },
@@ -26,16 +27,20 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
     requestCleaning: false,
     requestMaintenance: false,
     description: '',
-    maxOccupancy: 2,
-    images: []
   });
+  
+  const [imageFiles, setImageFiles] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
 
   useEffect(() => {
     if (selectedRoom) {
       setFormData({
         ...selectedRoom,
-        price: parseFloat(selectedRoom.price)
+        price: parseFloat(selectedRoom.price),
+        images: selectedRoom.images || []
       });
+      setImagePreviews(selectedRoom.images?.map(url => ({ id: Date.now() + Math.random(), url })) || []);
+      setImageFiles([]);
     } else {
       setFormData({
         roomID: '',
@@ -47,9 +52,9 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
         requestCleaning: false,
         requestMaintenance: false,
         description: '',
-        maxOccupancy: 2,
-        images: []
       });
+      setImagePreviews([]);
+      setImageFiles([]);
     }
   }, [selectedRoom, isOpen]);
 
@@ -61,58 +66,71 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
     }));
   };
 
-  const handleImageAdd = () => {
-    const newImage = { id: Date.now(), image: '' };
-    setFormData(prev => ({
-      ...prev,
-      images: [...prev.images, newImage]
-    }));
-  };
-
-  const handleImageChange = (id, value) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.map(img => 
-        img.id === id ? { ...img, image: value } : img
-      )
-    }));
-  };
-
-  const handleFileUpload = async (id, file) => {
-    if (file) {
-      try {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          handleImageChange(id, e.target.result);
-        };
-        reader.readAsDataURL(file);
-      } catch (error) {
-        console.error('Error uploading file:', error);
-      }
+  const handleFileUpload = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      
+      const newPreviews = newFiles.map(file => ({
+        id: Date.now() + Math.random(),
+        url: URL.createObjectURL(file),
+        name: file.name
+      }));
+      
+      setImageFiles(prev => [...prev, ...newFiles]);
+      setImagePreviews(prev => [...prev, ...newPreviews]);
     }
   };
 
-  const handleImageRemove = (id) => {
-    setFormData(prev => ({
-      ...prev,
-      images: prev.images.filter(img => img.id !== id)
-    }));
+  const handleRemoveImage = (id) => {
+    setImagePreviews(prev => prev.filter(preview => preview.id !== id));
+    selectedRoom.images = selectedRoom.room.images.filter(image => image.id !== id);
+   
+    const previewIndex = imagePreviews.findIndex(preview => preview.id === id);
+    if (previewIndex < imageFiles.length) {
+      setImageFiles(prev => {
+        const newFiles = [...prev];
+        newFiles.splice(previewIndex, 1);
+        return newFiles;
+      });
+    }
   };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const roomData = {
-      ...formData,
-      price: parseFloat(formData.price),
-      images: formData.images.filter(img => img.image.trim() !== '')
-    };
-    
-    if (selectedRoom) {
-      onUpdateRoom(roomData);
-    } else {
-      onAddRoom(roomData);
+
+    const data = new FormData();
+    Object.keys(formData).forEach((key) => {
+        data.append(key, formData[key]);
+    });
+
+    imageFiles.forEach((file) => {
+        data.append('images', file);
+    });
+
+    try {
+      for (let pair of data.entries()) {
+        console.log(pair[0], pair[1]);
     }
-  };
+        if (selectedRoom) {
+            const response = await api.put(`/backend/hotel_admin/rooms/${selectedRoom.roomID}/`, data);
+            console.log(response.body)
+        } else {
+            const response = await api.post('/backend/hotel_admin/rooms/', data , {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }});
+        }
+
+        if (response.status === 200 || response.status === 201) {
+            onClose();
+            fetchRooms();
+        } else {
+           console.log(response.body)
+        }
+    } catch (error) {
+        
+    }
+};
+
 
   return (
     <Modal
@@ -169,50 +187,59 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
         <div>
           <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-medium text-gray-300">Room Images</label>
-            <button
-              type="button"
-              onClick={handleImageAdd}
-              className="text-amber-300 hover:text-amber-400 transition-colors flex items-center text-sm"
-            >
+            <label className="cursor-pointer text-amber-300 hover:text-amber-400 transition-colors flex items-center text-sm">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                multiple
+              />
               <Plus className="w-4 h-4 mr-1" />
-              Add Image
-            </button>
+              Add Images
+            </label>
           </div>
-          <div className="space-y-2">
-            {formData.images.map((img, index) => (
-              <div key={img.id} className="flex gap-2">
-                <div className="flex-1 flex gap-2">
-                  <input
-                    type="url"
-                    value={img.image}
-                    onChange={(e) => handleImageChange(img.id, e.target.value)}
-                    placeholder="Enter image URL"
-                    className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-300 text-white"
+          
+          {/* Image previews */}
+          {imagePreviews.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+              {imagePreviews.map(preview => (
+                <div key={preview.id} className="relative group">
+                  <img
+                    src={preview.url}
+                    alt={preview.name || "Room image"}
+                    className="h-24 w-full object-cover rounded-md border border-gray-600"
                   />
-                  <div className="relative">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => handleFileUpload(img.id, e.target.files[0])}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    <button
-                      type="button"
-                      className="h-full px-3 bg-gray-700 border border-gray-600 rounded-md text-gray-300 hover:text-amber-300 transition-colors flex items-center"
-                    >
-                      <Upload className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(preview.id)}
+                    className="absolute top-1 right-1 p-1 bg-gray-900 bg-opacity-70 rounded-full text-red-400 hover:text-red-300 transition-opacity opacity-0 group-hover:opacity-100"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleImageRemove(img.id)}
-                  className="px-2 py-2 text-red-400 hover:text-red-300 transition-colors"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
+          
+          {/* Upload button */}
+          <div className="mt-2 border-2 border-dashed border-gray-600 rounded-md p-6 text-center">
+            <label className="cursor-pointer block w-full">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+                multiple
+              />
+              <Upload className="mx-auto w-8 h-8 text-gray-400 mb-2" />
+              <span className="text-sm text-gray-400 block">
+                Drag and drop images or click to browse
+              </span>
+              <span className="text-xs text-gray-500 block mt-1">
+                JPG, PNG, GIF up to 5MB
+              </span>
+            </label>
           </div>
         </div>
 

@@ -55,7 +55,8 @@ const RoomDetailsModal = ({ isOpen, onRequestClose, room, onEditClick, onDeleteC
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {room.images &&(
           <div>
             <div className="relative">
               <img 
@@ -63,7 +64,7 @@ const RoomDetailsModal = ({ isOpen, onRequestClose, room, onEditClick, onDeleteC
                 alt={`Room ${room.roomID} view ${currentImageIndex + 1}`}
                 className="w-full h-64 object-cover rounded-lg"
               />
-              {room.images.length > 1 && (
+              { room.images.length > 1 && (
                 <>
                   <button
                     onClick={prevImage}
@@ -102,7 +103,7 @@ const RoomDetailsModal = ({ isOpen, onRequestClose, room, onEditClick, onDeleteC
               ))}
             </div>
           </div>
-          
+          )}
           <div className="space-y-4">
             <div>
               <h3 className="text-lg font-semibold text-white mb-2">Room Details</h3>
@@ -113,7 +114,7 @@ const RoomDetailsModal = ({ isOpen, onRequestClose, room, onEditClick, onDeleteC
                 </div>
                 <div>
                   <p className="text-gray-400">Price per Night</p>
-                  <p className="text-white">£{parseFloat(room.price).toFixed(2)}</p>
+                  <p className="text-white">{parseFloat(room.price).toFixed(2)} DA</p>
                 </div>
                 <div>
                   <p className="text-gray-400">Bed Type</p>

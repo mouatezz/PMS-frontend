@@ -6,7 +6,7 @@ import RoomFilters from './RoomFilters';
 import AddEditRoomModal from './AddEditRoomModal';
 import RoomDetailsModal from './RoomDetailsModal';
 import { Plus, AlertTriangle } from "lucide-react";
-
+import api from "../api.js"
 if (typeof window !== 'undefined') {
   Modal.setAppElement('#root');
 }
@@ -19,59 +19,47 @@ const RoomsContainer = () => {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [filterType, setFilterType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [rooms, setRooms] = useState([]);
+  const [rooms, setRooms] = useState([
+    {
+      roomID: "101",
+      room_type: "standard",
+      bed_type: "2 Double Beds",
+      price: 1015.10,
+      is_occupied: false,
+      doNotDisturb: false,
+      requestCleaning: false,
+      requestMaintenance: false,
+      description: "Charming nautical theme.",
+     
+      amenities: [
+        "Free Wi-Fi",
+        "Air Conditioning",
+        "Flat-screen TV",
+        "Mini Fridge",
+        "Coffee Maker"
+      ],
+      images: [
+        { id: 1, image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1470&auto=format&fit=crop" },
+        { id: 2, image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1470&auto=format&fit=crop" },
+        { id: 3, image: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=1974&auto=format&fit=crop" }
+      ]
+    }
+  
+  ],
+)
 
   useEffect(() => {
-    setRooms([
-      {
-        roomID: "101",
-        room_type: "standard",
-        bed_type: "2 Double Beds",
-        price: 1015.10,
-        is_occupied: false,
-        doNotDisturb: false,
-        requestCleaning: false,
-        requestMaintenance: false,
-        description: "Charming nautical theme.",
-        maxOccupancy: 4,
-        images: [
-          { id: 1, image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1470&auto=format&fit=crop" },
-          { id: 2, image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1470&auto=format&fit=crop" },
-          { id: 3, image: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=1974&auto=format&fit=crop" }
-        ],
-        amenities: [
-          "Free Wi-Fi",
-          "Air Conditioning",
-          "Flat-screen TV",
-          "Mini Fridge",
-          "Coffee Maker"
-        ]
-      },
-      {
-        roomID: "102",
-        room_type: "deluxe",
-        bed_type: "2 Double Beds",
-        price: 1175.08,
-        is_occupied: true,
-        doNotDisturb: true,
-        requestCleaning: false,
-        requestMaintenance: false,
-        description: "Charming nautical theme, with a view of Lake Disney",
-        maxOccupancy: 4,
-        images: [
-          { id: 4, image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?q=80&w=1470&auto=format&fit=crop" },
-          { id: 5, image: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?q=80&w=1974&auto=format&fit=crop" }
-        ],
-        amenities: [
-          "Lake View",
-          "Free Wi-Fi",
-          "Air Conditioning",
-          "Flat-screen TV",
-          "Mini Fridge",
-          "Coffee Maker"
-        ]
+    const fetchrooms = async () => {
+      try {
+        const response = await api.get('/backend/hotel_admin/getRoom/');
+        console.log(response.data);
+       setRooms(response.data)
+       setAddEditModalIsOpen(false);
+      } catch (err) {
+        console.error(err);
       }
-    ]);
+    }
+    fetchrooms()
   }, []);
 
   const handleAddRoom = (newRoom) => {
@@ -86,7 +74,20 @@ const RoomsContainer = () => {
     setAddEditModalIsOpen(false);
   };
 
-  const handleDeleteRoom = () => {
+  const handleDeleteRoom = (roomID) => {
+    const deleteRoom =async (roomID)=>{
+      try {
+        console.log(roomID);
+        const response = await api.delete(`/backend/hotel_admin/rooms/${roomID}/`);
+        console.log(response.data);
+      } catch (err) {
+        console.error(err);
+        setError('Failed to delete room');
+        setLoading(false);
+      }
+    }
+    deleteRoom(roomID)
+
     setRooms(rooms.filter(room => room.roomID !== selectedRoom.roomID));
     setDeleteModalIsOpen(false);
     setDetailsModalIsOpen(false);
@@ -109,8 +110,8 @@ const RoomsContainer = () => {
   };
 
   const handleOpenDeleteModal = () => {
-    setDetailsModalIsOpen(false); // Close details modal first
-    setTimeout(() => setDeleteModalIsOpen(true), 100); // Open delete modal with a slight delay
+    setDetailsModalIsOpen(false); 
+    setTimeout(() => setDeleteModalIsOpen(true), 100); 
   };
 
   const filteredRooms = rooms.filter(room => {
@@ -136,6 +137,13 @@ const RoomsContainer = () => {
               Add New Room
             </button>
           </div>
+         <AddEditRoomModal
+        isOpen={addEditModalIsOpen}
+        onRequestClose={() => setAddEditModalIsOpen(false)}
+        selectedRoom={selectedRoom}
+        onAddRoom={handleAddRoom}
+        onUpdateRoom={handleUpdateRoom}
+      />
 
           <RoomFilters 
             searchQuery={searchQuery}
@@ -151,13 +159,7 @@ const RoomsContainer = () => {
         </div>
       </div>
 
-      <AddEditRoomModal
-        isOpen={addEditModalIsOpen}
-        onRequestClose={() => setAddEditModalIsOpen(false)}
-        selectedRoom={selectedRoom}
-        onAddRoom={handleAddRoom}
-        onUpdateRoom={handleUpdateRoom}
-      />
+     
 
       <RoomDetailsModal
         isOpen={detailsModalIsOpen}
@@ -191,7 +193,8 @@ const RoomsContainer = () => {
               Cancel
             </button>
             <button
-              onClick={handleDeleteRoom}
+              onClick={() => handleDeleteRoom(selectedRoom.roomID)}
+
               className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
             >
               Delete Room

@@ -6,6 +6,8 @@ import { Routes, Route } from 'react-router-dom';
 import ProtectedRoute from './ProtectedRoute';
 import UsersPage from './usersPage';
 import Booking from './booking'
+import RoomsContainer from './Rooms/RoomsContainer.jsx'
+
   function App() {
     return (
       <BrowserRouter>
@@ -20,6 +22,10 @@ import Booking from './booking'
           />
           <Route path="/bookings" element={
            <Booking />
+           }
+         />
+          <Route path="/rooms" element={
+           <RoomsContainer />
            }
          />
           <Route path="/login" element={<Authentication />} />
