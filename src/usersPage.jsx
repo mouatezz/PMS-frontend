@@ -25,13 +25,11 @@ const UsersPage = () => {
   const [staff, setStaff] = useState([
     { id: 'USR-1001', name: 'John Smith', email: 'john.smith@example.com', phone: '(555) 123-4567', role: 'Cleaner' },
     { id: 'USR-1002', name: 'Maria Garcia', email: 'maria.g@example.com', phone: '(555) 234-5678', role: 'Maintenance' },
-    // ... other staff members
   ]);
   
   const [guests, setGuests] = useState([
     { id: 'GST-1001', name: 'Alex Johnson', email: 'alex.j@example.com', phone: '(555) 111-2222', bookings: 3, status: 'Active' },
     { id: 'GST-1002', name: 'Sophia Williams', email: 'sophia.w@example.com', phone: '(555) 222-3333', bookings: 1, status: 'Active' },
-    // ... other guests
   ]);
   
   const getRoleColor = (role) => {

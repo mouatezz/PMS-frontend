@@ -4,10 +4,10 @@ import {
   Home,
   Calendar, 
   Users, 
-  BarChart3, 
-  Settings, 
+  BedDouble, // Rooms icon
+  UserCircle, // Admin Profile icon
   LogOut,
-  BedDouble // Added for Rooms icon
+  PartyPopper, // Events and Activities icon
 } from 'lucide-react';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
@@ -18,14 +18,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       href: '/dashboard' 
     },
     { 
-      icon: BedDouble, // Using BedDouble icon for Rooms
+      icon: BedDouble, 
       label: 'Rooms', 
-      href: '/rooms' // Route to Rooms.jsx
+      href: '/rooms' 
     },
     { 
-      icon: Calendar, 
-      label: 'Bookings', 
-      href: '#' 
+      icon: PartyPopper, 
+      label: 'Events and Activities', 
+      href: '/events-activities' 
     },
     { 
       icon: Users, 
@@ -33,14 +33,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       href: '/users' 
     },
     { 
-      icon: BarChart3, 
-      label: 'Reports', 
-      href: '#' 
-    },
-    { 
-      icon: Settings, 
-      label: 'Settings', 
-      href: '#' 
+      icon: UserCircle, 
+      label: 'Admin Profile', 
+      href: '/admin-profile' 
     }
   ];
 
