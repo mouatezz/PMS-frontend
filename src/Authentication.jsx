@@ -81,6 +81,7 @@ const Authentication = () => {
         });
         localStorage.setItem('access', res.data.access);
         localStorage.setItem('refresh', res.data.refresh);
+        localStorage.setItem('username', res.data.username);
         console.log(res.data);
         console.log(localStorage.getItem('access'));
         console.log(localStorage.getItem('refresh'));
@@ -271,16 +272,7 @@ const Authentication = () => {
           </div>
           
           <div className="text-center">
-            <p className="text-sm text-white/80">
-              {isLogin ? t.noAccount : t.haveAccount}
-              <button
-                type="button"
-                className="ml-1 text-amber-300 hover:text-amber-100 font-medium transition"
-                onClick={() => setIsLogin(!isLogin)}
-              >
-                {isLogin ? t.register : t.login}
-              </button>
-            </p>
+           
           </div>
         </form>
       </div>

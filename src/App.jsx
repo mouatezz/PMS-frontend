@@ -7,8 +7,10 @@ import ProtectedRoute from './ProtectedRoute';
 import UsersPage from './usersPage';
 import Booking from './booking'
 import RoomsContainer from './Rooms/RoomsContainer.jsx'
-
+import AdminProfile from './AdminProfile.jsx'
+import EventsActivities from './EventsActivities.jsx'
   function App() {
+
     return (
       <BrowserRouter>
         <Routes>
@@ -26,6 +28,15 @@ import RoomsContainer from './Rooms/RoomsContainer.jsx'
          />
           <Route path="/rooms" element={
            <RoomsContainer />
+           }
+         />
+         
+          <Route path="/profile" element={
+           <AdminProfile />
+           }
+         />
+          <Route path="/events" element={
+           <EventsActivities />
            }
          />
           <Route path="/login" element={<Authentication />} />

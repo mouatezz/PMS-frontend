@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import { X, Plus, Trash2, Upload } from 'lucide-react';
+import { X, Plus, Trash2, Upload , Check } from 'lucide-react';
 import api from '../api.js'
 if (typeof window !== 'undefined') {
   Modal.setAppElement('#root');
 }
-import fetchRooms from './RoomsContainer.jsx'
 
 const ROOM_TYPES = [
   { value: 'standard', label: 'Standard' },
@@ -16,7 +15,7 @@ const ROOM_TYPES = [
   { value: 'triple', label: 'Triple' }
 ];
 
-const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onUpdateRoom }) => {
+const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onUpdateRoom ,fetchrooms }) => {
   const [formData, setFormData] = useState({
     roomID: '',
     room_type: 'standard',
@@ -27,11 +26,36 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
     requestCleaning: false,
     requestMaintenance: false,
     description: '',
+    amenities: []
   });
-  
+  const AMENITIES = [
+    { id: 7, label: 'WiFi' },
+    { id: 8, label: 'TV' },
+    { id: 9, label: 'Air Conditioning' },
+  ];
+  const handleAmenityToggle = (amenityId) => {
+    setFormData(prev => {
+      const currentAmenities = [...(prev.amenities || [])];
+      
+      if (currentAmenities.includes(amenityId)) {
+        return {
+          ...prev,
+          amenities: currentAmenities.filter(id => id !== amenityId)
+        };
+      } else {
+        return {
+          ...prev,
+          amenities: [...currentAmenities, amenityId]
+        };
+      }
+    });
+  };
+
+
+
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
-
+  const [imageurls,setimageurls] =useState([]);
   useEffect(() => {
     if (selectedRoom) {
       setFormData({
@@ -39,7 +63,7 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
         price: parseFloat(selectedRoom.price),
         images: selectedRoom.images || []
       });
-      setImagePreviews(selectedRoom.images?.map(url => ({ id: Date.now() + Math.random(), url })) || []);
+      setImagePreviews(selectedRoom.images?.map(image => ({ id: image.id, image :image.image })) || []);
       setImageFiles([]);
     } else {
       setFormData({
@@ -52,6 +76,7 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
         requestCleaning: false,
         requestMaintenance: false,
         description: '',
+        amenities:[]
       });
       setImagePreviews([]);
       setImageFiles([]);
@@ -72,7 +97,7 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
       
       const newPreviews = newFiles.map(file => ({
         id: Date.now() + Math.random(),
-        url: URL.createObjectURL(file),
+        image: URL.createObjectURL(file),
         name: file.name
       }));
       
@@ -83,7 +108,12 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
 
   const handleRemoveImage = (id) => {
     setImagePreviews(prev => prev.filter(preview => preview.id !== id));
-    selectedRoom.images = selectedRoom.room.images.filter(image => image.id !== id);
+    setFormData(prevRoom => ({
+      ...prevRoom,
+      images: prevRoom.images.filter(image => image.id !== id)
+    }));
+    setimageurls([...imageurls, { id: id }])
+    console.log(imageurls)
    
     const previewIndex = imagePreviews.findIndex(preview => preview.id === id);
     if (previewIndex < imageFiles.length) {
@@ -96,39 +126,71 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    onRequestClose();
     const data = new FormData();
+   
+
     Object.keys(formData).forEach((key) => {
-        data.append(key, formData[key]);
-    });
+      if (key === 'amenities') {
+         formData[key].forEach(amenityId => {
+            data.append('amenities', amenityId);
+        });
+      } else {
+          data.append(key, formData[key]);
+      }
+  });
 
     imageFiles.forEach((file) => {
         data.append('images', file);
     });
+    
 
     try {
       for (let pair of data.entries()) {
         console.log(pair[0], pair[1]);
     }
-        if (selectedRoom) {
-            const response = await api.put(`/backend/hotel_admin/rooms/${selectedRoom.roomID}/`, data);
-            console.log(response.body)
-        } else {
-            const response = await api.post('/backend/hotel_admin/rooms/', data , {
-              headers: {
-                'Content-Type': 'multipart/form-data'
-              }});
-        }
+if (selectedRoom) {
+  const response = await api.put(`/backend/hotel_admin/rooms/${selectedRoom.roomID}/`, data, {
+      headers: {
+          'Content-Type': 'multipart/form-data'
+      }
+  });
+  
+  if (imageurls.length > 0) {
+      const deleteResponse = await api.delete('/backend/hotel_admin/roomimages/', {
+          data: { urls: imageurls } 
+      });
+          console.log("Response:", response.body);
+          console.log("Delete response:", deleteResponse.body);
+      
+  } 
+  if (response.status==400 ||  response.status==500){
+    alert('Failed to update room !')
+  }
+  fetchrooms();
 
-        if (response.status === 200 || response.status === 201) {
-            onClose();
-            fetchRooms();
-        } else {
-           console.log(response.body)
+} else {
+  const response = await api.post('/backend/hotel_admin/rooms/', data, {
+      headers: {
+          'Content-Type': 'multipart/form-data'
+      }
+  });
+  onRequestClose();
+  fetchrooms();
+
+      console.log("Response:", response.body);
+
+        if (response.status==400 ||  response.status==500){
+          alert('Failed to create room !')
         }
+  
+}
     } catch (error) {
-        
+      console.log(error);
+  
     }
+
+    
 };
 
 
@@ -206,8 +268,8 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
               {imagePreviews.map(preview => (
                 <div key={preview.id} className="relative group">
                   <img
-                    src={preview.url}
-                    alt={preview.name || "Room image"}
+                    src={preview.image}
+                    alt={preview.id || "Room image"}
                     className="h-24 w-full object-cover rounded-md border border-gray-600"
                   />
                   <button
@@ -271,6 +333,7 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
           </div>
         </div>
 
+
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
           <textarea
@@ -282,48 +345,30 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="is_occupied"
-              checked={formData.is_occupied}
-              onChange={handleInputChange}
-              className="h-4 w-4 text-amber-300 focus:ring-amber-300 bg-gray-700 border-gray-600 rounded"
-            />
-            <label className="ml-2 text-sm text-gray-300">Occupied</label>
-          </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="doNotDisturb"
-              checked={formData.doNotDisturb}
-              onChange={handleInputChange}
-              className="h-4 w-4 text-amber-300 focus:ring-amber-300 bg-gray-700 border-gray-600 rounded"
-            />
-            <label className="ml-2 text-sm text-gray-300">Do Not Disturb</label>
-          </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="requestCleaning"
-              checked={formData.requestCleaning}
-              onChange={handleInputChange}
-              className="h-4 w-4 text-amber-300 focus:ring-amber-300 bg-gray-700 border-gray-600 rounded"
-            />
-            <label className="ml-2 text-sm text-gray-300">Request Cleaning</label>
-          </div>
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              name="requestMaintenance"
-              checked={formData.requestMaintenance}
-              onChange={handleInputChange}
-              className="h-4 w-4 text-amber-300 focus:ring-amber-300 bg-gray-700 border-gray-600 rounded"
-            />
-            <label className="ml-2 text-sm text-gray-300">Request Maintenance</label>
-          </div>
+          {/* Amenities Section */}
+<div>
+  <label className="block text-sm font-medium text-gray-300 mb-3">Amenities</label>
+  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+    {AMENITIES.map(amenity => (
+      <div 
+        key={amenity.id} 
+        className={`
+          flex items-center p-3 border rounded-md cursor-pointer
+          ${formData.amenities?.includes(amenity.id) 
+            ? 'border-amber-400 bg-amber-400 bg-opacity-10' 
+            : 'border-gray-600 hover:border-gray-500'}
+        `}
+        onClick={() => handleAmenityToggle(amenity.id)}
+      >
+        {/* Checkbox-like element */}
+        <div className={`checkbox-style ${formData.amenities?.includes(amenity.id) ? 'checked' : ''}`}>
+          {formData.amenities?.includes(amenity.id) && <Check size={16} />}
         </div>
+        <span className="ml-2 text-sm text-gray-300">{amenity.label}</span>
+      </div>
+    ))}
+  </div>
+</div>
 
         <div className="flex flex-col md:flex-row justify-end gap-4 mt-6">
           <button
@@ -338,6 +383,7 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
             className="px-4 py-2 bg-amber-300 text-gray-900 rounded-md hover:bg-amber-400 transition-colors w-full md:w-auto"
           >
             {selectedRoom ? 'Save Changes' : 'Add Room'}
+            
           </button>
         </div>
       </form>

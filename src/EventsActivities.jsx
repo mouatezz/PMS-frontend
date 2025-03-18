@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState  ,useEffect} from 'react';
 import Sidebar from './SideBar';
+import api from './api.js'
 import { 
   Plus, 
   Edit, 
-  Trash2, 
+  Trash2, Camera,
   Search, 
   Filter,
-  CheckCircle2,
+  CheckCircle2,Upload,
   X,
   Calendar,
   Clock,
@@ -21,13 +22,15 @@ const EventsActivities = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('All');
   const [editingEventId, setEditingEventId] = useState(null);
+  const [backimage , setbackimage]=useState(null)
   const [newEvent, setNewEvent] = useState({
+
     name: '',
     date: '',
     time: '',
     location: '',
-    type: 'Event',
-    imageUrl: '/api/placeholder/600/400'
+    imageUrl : '',
+    description: ''
   });
 
   const [events, setEvents] = useState([
@@ -37,49 +40,28 @@ const EventsActivities = () => {
       date: '2024-07-15',
       time: '14:00',
       location: 'Hotel Pool Area',
-      type: 'Activity',
+      
       imageUrl: 'https://as2.ftcdn.net/v2/jpg/03/86/13/33/1000_F_386133321_K9KI3XQ0HHco4mgJNlPCbNvqCICrzCw9.jpg',
       description: 'Enjoy a refreshing afternoon by the pool with music and refreshments.'
     },
-    {
-      id: 'EVT-1002',
-      name: 'Wedding Reception',
-      date: '2024-08-20',
-      time: '18:00',
-      location: 'Grand Ballroom',
-      type: 'Event',
-      imageUrl: 'https://as1.ftcdn.net/v2/jpg/02/94/88/20/1000_F_294882058_QXbbrcpLbyNT0bp7KbqDSNXwPUJBYbDp.jpg',
-      description: 'Celebrate the union of Mr. and Mrs. Smith with dinner and dancing.'
-    },
-    {
-      id: 'EVT-1003',
-      name: 'Yoga Session',
-      date: '2024-06-10',
-      time: '08:00',
-      location: 'Beach Front',
-      type: 'Activity',
-      imageUrl: 'https://as1.ftcdn.net/v2/jpg/09/89/03/84/1000_F_989038477_eIRaQtUP40ZC3nhldxC5dTVMHey8XCP9.jpg',
-      description: 'Start your day with a relaxing yoga session by the beach.'
-    },
-    {
-      id: 'EVT-1004',
-      name: 'Annual Gala',
-      date: '2024-09-05',
-      time: '19:30',
-      location: 'Embassy Ballroom',
-      type: 'Event',
-      imageUrl: 'https://as1.ftcdn.net/v2/jpg/13/19/03/76/1000_F_1319037697_5tbFFWoAlW4uiM0vs9lZyqoCgxmBjP8j.jpg',
-      description: 'Our prestigious annual fundraising event with live entertainment.'
-    }
   ]);
 
-  const getTypeColor = (type) => {
-    switch(type) {
-      case 'Event': return 'bg-purple-500/20 text-purple-500 border-purple-500';
-      case 'Activity': return 'bg-amber-300/20 text-amber-300 border-amber-300';
-      default: return 'bg-gray-500/20 text-gray-500 border-gray-500';
+
+  const getevents = async () => {
+    try {
+      const response = await api.get(`/backend/hotel_admin/event/`);
+      console.log(response.data);
+      setEvents(response.data);
+    } catch (err) {
+      console.error(err);
     }
   };
+
+  useEffect(() =>{
+     getevents()
+  }, []);
+
+ 
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -92,47 +74,105 @@ const EventsActivities = () => {
     };
   };
 
-  const handleCreateEvent = (e) => {
+  const editevent =async(e , eventId)=>{
+    e.preventDefault()
+    const formData = new FormData();
+    formData.append("id", eventId); 
+    formData.append("imageUrl", backimage); 
+    formData.append("description", newEvent.description);
+    formData.append("name", newEvent.name);
+    formData.append("location", newEvent.location);
+    let date = combineDateTime(newEvent.date, newEvent.time);
+    formData.append("date", date);
+    try {
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}:`, pair[1]);
+      }
+      console.log();
+      const response = await api.put(`/backend/hotel_admin/event/${eventId}` ,formData ,{
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      console.log(response.data);
+      setEvents(response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  const handleCreateEvent = async(e) => {
     e.preventDefault();
-    
-    if (editingEventId) {
-      // Update existing event
-      setEvents(events.map(event => 
-        event.id === editingEventId ? { ...newEvent, id: editingEventId } : event
-      ));
-      setEditingEventId(null);
-    } else {
-      // Create new event
-      const newId = `EVT-${1000 + events.length + 1}`;
-      setEvents([...events, { 
-        id: newId, 
-        ...newEvent,
-        description: newEvent.description || 'No description provided.'
-      }]);
+    const formData = new FormData();
+    formData.append("imageUrl", backimage); 
+    formData.append("description", newEvent.description);
+    formData.append("name", newEvent.name);
+    formData.append("location", newEvent.location);
+    let date = combineDateTime(newEvent.date, newEvent.time);
+    formData.append("date", date);
+    for (let pair of formData.entries()) {
+      console.log(`${pair[0]}:`, pair[1]);
+    }
+    try {
+      
+      console.log();
+      const response = await api.post(`/backend/hotel_admin/event/` ,formData ,{
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+      getevents()
+      console.log(response.data);
+      if (response.status != 200){
+           alert('failed to create event !')
+      }
+    } catch (err) {
+      console.error(err);
     }
     
-    setNewEvent({
+    setNewEvent([{
       name: '',
       date: '',
       time: '',
       location: '',
       type: 'Event',
-      imageUrl: '/api/placeholder/600/400',
       description: ''
-    });
+    }]);
     setShowModal(false);
   };
-
+  const combineDateTime = (date, time) => {
+    return `${date}T${time}:00Z`; 
+  };
   const handleEditEvent = (eventId) => {
+    
     const eventToEdit = events.find(event => event.id === eventId);
     if (eventToEdit) {
       setNewEvent({ ...eventToEdit });
       setEditingEventId(eventId);
       setShowModal(true);
     }
+  
+    
   };
-
-  const handleDeleteEvent = (eventId) => {
+  const handleimageUpload = (e) => { 
+    const file = e.target.files[0];
+    if (file) {
+      setbackimage(file); 
+     
+    }
+  };
+  const handleDeleteEvent = async(eventId) => {
+   
+    try {
+      console.log();
+      const response = await api.delete(`/backend/hotel_admin/event/${eventId}` , 
+      );
+      console.log(response.data);
+      getevents()
+    } catch (err) {
+      console.error(err);
+    }
     setEvents(events.filter(event => event.id !== eventId));
   };
 
@@ -208,7 +248,7 @@ const EventsActivities = () => {
             </div>
 
             {/* Card Grid Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {filteredEvents.map((event) => {
                 const dateInfo = formatDate(event.date);
                 return (
@@ -219,11 +259,7 @@ const EventsActivities = () => {
                       alt={event.name} 
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute top-4 right-4">
-                      <span className={`px-3 py-1.5 rounded-full text-xs font-medium border ${getTypeColor(event.type)}`}>
-                        {event.type}
-                      </span>
-                    </div>
+                   
                     <div className="absolute top-4 left-4 bg-gray-900/80 rounded-lg p-2 text-center min-w-12">
                       <div className="text-amber-300 text-xs font-medium">{dateInfo.month}</div>
                       <div className="text-white text-xl font-bold">{dateInfo.day}</div>
@@ -239,11 +275,11 @@ const EventsActivities = () => {
                     <div className="space-y-2">
                       <div className="flex items-center text-gray-300 text-sm">
                         <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                        <span>{dateInfo.formattedDate}</span>
+                        <span>{event.date.split('T')[0]}</span>
                       </div>
                       <div className="flex items-center text-gray-300 text-sm">
                         <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                        <span>{event.time}</span>
+                        <span>{event.date.split('T')[1]}</span>
                       </div>
                       <div className="flex items-center text-gray-300 text-sm">
                         <MapPin className="h-4 w-4 mr-2 text-gray-400" />
@@ -253,6 +289,7 @@ const EventsActivities = () => {
                     <div className="mt-4 flex justify-end space-x-2">
                       <button 
                         onClick={() => handleEditEvent(event.id)}
+
                         className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 p-2 rounded-md transition-colors"
                       >
                         <Edit className="h-5 w-5" />
@@ -300,7 +337,15 @@ const EventsActivities = () => {
               </button>
             </div>
 
-            <form onSubmit={handleCreateEvent} className="p-6">
+            <form onSubmit={(e) => {
+              if (editingEventId) {
+                editevent(e, editingEventId);
+              } else {
+                handleCreateEvent(e);
+              }
+              setShowModal(false);
+            }}
+            className="p-6">
               <div className="space-y-4">
                 <div>
                   <label className="block text-gray-300 mb-1 font-medium">Name</label>
@@ -350,44 +395,27 @@ const EventsActivities = () => {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-gray-300 mb-1 font-medium">Type</label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="eventType"
-                        value="Event"
-                        checked={newEvent.type === 'Event'}
-                        onChange={(e) => setNewEvent({...newEvent, type: e.target.value})}
-                        className="form-radio text-purple-500 focus:ring-purple-500"
-                      />
-                      <span className="text-white">Event</span>
-                    </label>
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="eventType"
-                        value="Activity"
-                        checked={newEvent.type === 'Activity'}
-                        onChange={(e) => setNewEvent({...newEvent, type: e.target.value})}
-                        className="form-radio text-amber-300 focus:ring-amber-300"
-                      />
-                      <span className="text-white">Activity</span>
-                    </label>
-                  </div>
-                </div>
+                
 
                 <div>
-                  <label className="block text-gray-300 mb-1 font-medium">Image URL</label>
-                  <input 
-                    type="text" 
-                    className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
-                    value={newEvent.imageUrl}
-                    onChange={(e) => setNewEvent({...newEvent, imageUrl: e.target.value})}
-                    placeholder="Image URL"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Leave default for placeholder image</p>
+                <div className="mt-2 border-2 border-dashed border-amber-400 rounded-md p-6 text-center">
+            <label className="cursor-pointer block w-full">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleimageUpload}
+                className="hidden"
+                multiple
+              />
+              <Upload className="mx-auto w-8 h-8 text-gray-400 mb-2" />
+              <span className="text-sm text-gray-400 block">
+                Drag and drop images or click to browse
+              </span>
+              <span className="text-xs text-gray-500 block mt-1">
+                JPG, PNG, GIF up to 5MB
+              </span>
+            </label>
+          </div>
                 </div>
 
                 <div>

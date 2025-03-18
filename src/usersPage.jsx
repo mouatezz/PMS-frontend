@@ -59,8 +59,11 @@ const UsersPage = () => {
     e.preventDefault();
     const createUser = async () => {
       try {
-        if (newUser.role === 'receptionist') {
+        if (newUser.role === 'receptionist' ||newUser.role === 'admin' ) {
           removeAttributes(['staffRole', 'rooms_responsible']);
+        } 
+        if (newUser.role === 'admin' ) {
+          removeAttributes(['shift', 'salary']);
         } 
         console.log(newUser);
         const response = await api.post('backend/register/',newUser);
@@ -73,6 +76,7 @@ const UsersPage = () => {
       }
     };
     createUser();
+    fetchUsers()
   };
 
   const handleDeleteUser = (username) => {
@@ -120,20 +124,20 @@ const UsersPage = () => {
     return matchesSearch && matchesRole;
   });
  /////////////////api/////////////
-
+ const fetchUsers = async () => {
+  try {
+    const response = await api.get('backend/hotel_admin/users/');
+    console.log(response.data);
+    setUsers(response.data);
+    setLoading(false);
+  } catch (err) {
+    console.error(err);
+    setError('Failed to fetch users');
+    setLoading(false);
+  }
+};
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await api.get('backend/hotel_admin/users/');
-        console.log(response.data);
-        setUsers(response.data);
-        setLoading(false);
-      } catch (err) {
-        console.error(err);
-        setError('Failed to fetch users');
-        setLoading(false);
-      }
-    };
+  
 
     const fetchStaff = async () => {
       try {
@@ -454,13 +458,14 @@ const UsersPage = () => {
                      
                     }}
                   >
-                    <option value="receptionist">receptionist</option>
-                    <option value="staff">hotel staff</option>
+                    <option value="admin">Admin</option>
+                    <option value="receptionist">Receptionist</option>
+                    <option value="staff">Hotel Staff</option>
                   </select>
                 </div>
               
                  
- {newUser.role && next && (
+ {newUser.role && next && newUser.role !== 'admin'&& (
   <>
     <div>
       <label className="block text-gray-400 mb-1">Shift</label>

@@ -47,18 +47,18 @@ const RoomsContainer = () => {
   
   ],
 )
-
+const fetchrooms = async () => {
+  try {
+    const response = await api.get('/backend/hotel_admin/getRoom/');
+    console.log(response.data);
+   setRooms(response.data)
+   setAddEditModalIsOpen(false);
+  } catch (err) {
+    console.error(err);
+  }
+}
   useEffect(() => {
-    const fetchrooms = async () => {
-      try {
-        const response = await api.get('/backend/hotel_admin/getRoom/');
-        console.log(response.data);
-       setRooms(response.data)
-       setAddEditModalIsOpen(false);
-      } catch (err) {
-        console.error(err);
-      }
-    }
+   
     fetchrooms()
   }, []);
 
@@ -143,6 +143,8 @@ const RoomsContainer = () => {
         selectedRoom={selectedRoom}
         onAddRoom={handleAddRoom}
         onUpdateRoom={handleUpdateRoom}
+        setSelectedRoom={setSelectedRoom}
+        fetchRooms={fetchrooms}
       />
 
           <RoomFilters 

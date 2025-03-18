@@ -6,7 +6,7 @@ import {
   Users, 
   BarChart3, 
   Settings, 
-  LogOut,
+  LogOut, PartyPopper,UserCircle,
   BedDouble // Added for Rooms icon
 } from 'lucide-react';
 import {logout} from "./utils"
@@ -33,14 +33,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       href: '/users' 
     },
     { 
-      icon: BarChart3, 
-      label: 'Reports', 
-      href: '#' 
+      icon: PartyPopper, 
+      label: 'Events and Activities', 
+      href: '/events' 
     },
     { 
-      icon: Settings, 
-      label: 'Settings', 
-      href: '#' 
+      icon: UserCircle, 
+      label: 'Admin Profile', 
+      href: '/profile' 
     }
   ];
 

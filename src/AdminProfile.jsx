@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState  , useEffect} from 'react';
 import Sidebar from './SideBar';
+import api from './api.js'
 import { 
   CheckCircle2,
   X,
@@ -9,36 +10,75 @@ import {
 } from 'lucide-react';
 
 const AdminProfile = () => {
+  const  defaultimage = '/src/assets/images/defaultUser.png'
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [adminInfo, setAdminInfo] = useState({
-    name: 'Admin',
-    email: 'admin@example.com',
-    phone: '+213000000000',
-    profilePic: '/src/assets/images/defaultUser.png' 
+    username: 'loading...',
+    role: "loading...",
+    fullname : "loading...",
+    email: 'loading...@example.com',
+    phone: 'loading...',
+    image: '/src/assets/images/defaultUser.png' 
   });
   const [editMode, setEditMode] = useState(false);
-  const [newProfilePic, setNewProfilePic] = useState(null);
-
-  const handleUpdateProfile = (e) => {
+  const [newimage, setnewimage] = useState(null);
+const [backimage , setbackimage]= useState(null)
+  const handleUpdateProfile = async (e) => {
     e.preventDefault();
-    setAdminInfo({
-      ...adminInfo,
-      profilePic: newProfilePic || adminInfo.profilePic
-    });
-    setEditMode(false);
+    const formData = new FormData();
+  formData.append("image", backimage); 
+  formData.append("name", adminInfo.name);
+  formData.append("email", adminInfo.email);
+  formData.append("fullname", adminInfo.fullname);
+
+    try {
+
+      const username = localStorage.getItem('username');
+      for (let pair of formData.entries()) {
+        console.log(`${pair[0]}:`, pair[1]);
+      }
+      const response = await api.put(`/backend/hotel_admin/deleteusers/${username}/` ,  formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      console.log(response.data);
+      setEditMode(false)
+    } catch (err) {
+      console.error(err);
+      setEditMode(false)
+    }
   };
 
-  const handleProfilePicUpload = (e) => {
+  const getuserinfos = async (username) => {
+    try {
+      console.log(username)
+      const response = await api.get(`/backend/hotel_admin/deleteusers/${username}/`);
+      console.log(response.data);
+      setAdminInfo(response.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() =>{
+     let user =localStorage.getItem('username')
+     getuserinfos(user)
+  }, []);
+
+  const handleimageUpload = (e) => { 
     const file = e.target.files[0];
     if (file) {
+      setbackimage(file); 
       const reader = new FileReader();
       reader.onloadend = () => {
-        setNewProfilePic(reader.result);
+        setnewimage(reader.result);
       };
       reader.readAsDataURL(file);
     }
   };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex">
       <Sidebar 
@@ -55,18 +95,12 @@ const AdminProfile = () => {
                   <div className="absolute -bottom-16 left-8">
                     <div className="relative">
                       <div className="w-32 h-32 rounded-full border-4 border-gray-800 overflow-hidden bg-gray-700 flex items-center justify-center">
-                        {newProfilePic || adminInfo.profilePic ? (
+                        {newimage || adminInfo.image ? (
                           <img
-                            src={newProfilePic || adminInfo.profilePic}
+                          src={newimage || `http://127.0.0.1:8000${adminInfo.image}` } 
                             alt="Profile"
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.style.display = 'none';
-                              e.target.parentElement.classList.add('flex');
-                              e.target.parentElement.classList.add('items-center');
-                              e.target.parentElement.classList.add('justify-center');
-                            }}
+                           
                           />
                         ) : (
                           <User className="h-16 w-16 text-gray-500" />
@@ -85,7 +119,7 @@ const AdminProfile = () => {
                         type="file"
                         accept="image/*"
                         className="hidden"
-                        onChange={handleProfilePicUpload}
+                        onChange={handleimageUpload}
                       />
                     </div>
                   </div>
@@ -112,14 +146,21 @@ const AdminProfile = () => {
 
                 <div className="pt-20 px-8 pb-8">
                   <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-white mb-1">{adminInfo.name}</h2>
-                    <div className="text-amber-300 text-lg font-medium mb-4">Administrator</div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="flex items-center text-gray-300">
+                    <h2 className="text-3xl font-bold text-white mb-1">{adminInfo.username}</h2>
+                    <div className="text-amber-300 text-lg font-medium mb-4">{adminInfo.role}</div>
+                    <div className=" gap-6">
+
+                      
+                      <div className="flex items-center text-gray-300 pb-3">
+                        
+                        <div className="w-24 text-gray-500">name</div>
+                        <div className="text-lg">{adminInfo.fullname}</div>
+                      </div>
+                      <div className="flex items-center text-gray-300 pb-3">
                         <div className="w-24 text-gray-500">Email</div>
                         <div className="text-lg">{adminInfo.email}</div>
                       </div>
-                      <div className="flex items-center text-gray-300">
+                      <div className="flex items-center text-gray-300 pb-3">
                         <div className="w-24 text-gray-500">Phone</div>
                         <div className="text-lg">{adminInfo.phone}</div>
                       </div>
@@ -136,9 +177,9 @@ const AdminProfile = () => {
                             type="text"
                             required
                             className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
-                            value={adminInfo.name}
+                            value={adminInfo.fullname}
                             onChange={(e) =>
-                              setAdminInfo({ ...adminInfo, name: e.target.value })
+                              setAdminInfo({ ...adminInfo, fullname: e.target.value })
                             }
                           />
                         </div>
