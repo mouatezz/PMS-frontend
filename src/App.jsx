@@ -1,6 +1,6 @@
 import React from 'react';
 import Authentication from './Authentication';
-import Dashboard from './Dashboard';
+import Dashboard from './dashboard/Dashboard.jsx';
 import UsersPage from './usersPage';
 import RoomsContainer from './Rooms/RoomsContainer.jsx';
 import AdminProfile from './AdminProfile';
@@ -10,6 +10,8 @@ const App = () => {
   const path = window.location.pathname;
 
   switch (path) {
+    case '/':
+      return <Dashboard />;
     case '/login':
       return <Authentication />;
     case '/dashboard':
@@ -23,7 +25,7 @@ const App = () => {
     case '/events-activities':
       return <EventsActivities />;
     default:
-      window.location.href = '/login';
+      window.location.href = '/';
       return null;
   }
 };
