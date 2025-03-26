@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { X, Plus, Trash2, Upload , Check } from 'lucide-react';
-import api from '../api.js'
+import api from '../../api.js'
 if (typeof window !== 'undefined') {
   Modal.setAppElement('#root');
 }

@@ -16,7 +16,7 @@ const RoomCard = ({ room, onClick }) => {
 
   return (
     <div 
-      className="bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-700 cursor-pointer hover:border-amber-300 transition-colors max-h-60"
+      className="bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-700 cursor-pointer hover:border-amber-300 transition-colors max-h-80"
       onClick={onClick}
     >
       <div className="flex flex-col md:flex-row">

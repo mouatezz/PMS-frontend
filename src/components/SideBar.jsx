@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { 
   Building2, 
   Home,
@@ -7,9 +8,9 @@ import {
   BarChart3, 
   Settings, 
   LogOut, PartyPopper,UserCircle,
-  BedDouble // Added for Rooms icon
+  BedDouble 
 } from 'lucide-react';
-import {logout} from "./utils"
+import {logout} from "../utils"
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const menuItems = [
     { 
@@ -18,9 +19,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       href: '/' 
     },
     { 
-      icon: BedDouble, // Using BedDouble icon for Rooms
+      icon: BedDouble, 
       label: 'Rooms', 
-      href: '/rooms' // Route to Rooms.jsx
+      href: '/rooms' 
     },
     { 
       icon: Calendar, 
@@ -36,11 +37,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       icon: PartyPopper, 
       label: 'Events and Activities', 
       href: '/events' 
-    },
-    { 
-      icon: UserCircle, 
-      label: 'Admin Profile', 
-      href: '/profile' 
     }
   ];
 
@@ -51,13 +47,21 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         md:translate-x-0 transition-transform duration-300 
         ease-in-out bg-gray-900 border-r border-gray-800 flex flex-col`}
     >
-      <div className="p-4 flex items-center space-x-3 border-b border-gray-800">
-        <Building2 className="h-6 w-6 text-amber-300" />
-        <div>
-          <h1 className="text-lg font-medium text-white">Admin</h1>
-        </div>
+      <Link to='/profile'>
+          <div className="p-6 mt-6 flex flex-col items-center space-y-2 border-b border-gray-800">
+        <img 
+          src={`http://127.0.0.1:8000${localStorage.getItem('image')}` }
+          alt="profile pic" 
+          className="h-20 w-20 rounded-full object-cover mb-2"
+        />
+        <span className="text-white font-semibold truncate text-xl">
+          {localStorage.getItem('username')}
+        </span>
+        <span className="text-gray-400 text-sm">
+         novotel hotel Admin
+        </span>
       </div>
-      
+      </Link>
       <nav className="flex-1 px-4 py-4 space-y-1">
         {menuItems.map((item, index) => {
           const isActive = window.location.pathname === item.href;

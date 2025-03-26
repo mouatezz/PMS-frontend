@@ -1,14 +1,14 @@
 import React from 'react';
-import Authentication from './Authentication';
-import Dashboard from './Dashboard';
+import Authentication from './pages/Authentication';
+import Dashboard from './pages/dashboard/Dashboard.jsx';
 import { BrowserRouter } from 'react-router-dom';
 import { Routes, Route } from 'react-router-dom';
-import ProtectedRoute from './ProtectedRoute';
-import UsersPage from './usersPage';
-import Booking from './booking'
-import RoomsContainer from './Rooms/RoomsContainer.jsx'
-import AdminProfile from './AdminProfile.jsx'
-import EventsActivities from './EventsActivities.jsx'
+import ProtectedRoute from './components/ProtectedRoute';
+import UsersPage from './pages/usersPage.jsx';
+import Booking from './pages/booking.jsx'
+import RoomsContainer from './pages/Rooms/RoomsContainer.jsx'
+import AdminProfile from './pages/AdminProfile.jsx'
+import EventsActivities from './pages/EventsActivities.jsx'
   function App() {
 
     return (

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import Sidebar from '../SideBar';
-import RoomList from './RoomList';
-import RoomFilters from './RoomFilters';
-import AddEditRoomModal from './AddEditRoomModal';
-import RoomDetailsModal from './RoomDetailsModal';
+import Sidebar from '../../components/SideBar';
+import RoomList from './RoomList.jsx';
+import RoomFilters from './RoomFilters.jsx';
+import AddEditRoomModal from './AddEditRoomModal.jsx';
+import RoomDetailsModal from './RoomDetailsModal.jsx';
 import { Plus, AlertTriangle } from "lucide-react";
-import api from "../api.js"
+import api from "../../api.js"
 if (typeof window !== 'undefined') {
   Modal.setAppElement('#root');
 }

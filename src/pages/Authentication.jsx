@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Building2, Key, User, Mail, Lock } from 'lucide-react';
 
-import api from './api';
+import api from '../api';
 import { useNavigate } from 'react-router-dom';
 
 
@@ -82,6 +82,8 @@ const Authentication = () => {
         localStorage.setItem('access', res.data.access);
         localStorage.setItem('refresh', res.data.refresh);
         localStorage.setItem('username', res.data.username);
+        localStorage.setItem('image', res.data.image);
+        localStorage.setItem('role', res.data.role);
         console.log(res.data);
         console.log(localStorage.getItem('access'));
         console.log(localStorage.getItem('refresh'));

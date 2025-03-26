@@ -1,6 +1,6 @@
 import React, { useState  ,useEffect} from 'react';
-import Sidebar from './SideBar';
-import api from './api.js'
+import Sidebar from '../components/SideBar';
+import api from '../api.js'
 import { 
   Plus, 
   Edit, 
