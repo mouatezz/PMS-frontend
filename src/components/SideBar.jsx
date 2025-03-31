@@ -29,6 +29,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       href: '/bookings' 
     },
     { 
+      icon: BarChart3, 
+      label: 'Incomes',
+      href: '/payment' 
+    },
+    { 
       icon: Users, 
       label: 'Users', 
       href: '/users' 

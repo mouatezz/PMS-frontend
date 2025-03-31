@@ -343,7 +343,7 @@ const UsersPage = () => {
                 <Filter className="absolute right-2 top-2.5 h-5 w-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
-            <DataTable
+            <DataTable 
               columns={activeTab === 'staff' ? staffColumns : userColumns}
               data={activeTab === 'staff' ? filteredStaff : filteredUsers}
               onDelete={handleDeleteUser}

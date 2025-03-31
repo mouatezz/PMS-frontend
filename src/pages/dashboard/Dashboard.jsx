@@ -32,7 +32,7 @@ const [bookings, setTotalBookings] = useState(0);
 const [amount, setTotalAmount] = useState(0);
 const [occupency, setOccupancyRate] = useState(0);
 const [checkins, setTotalCheckins] = useState(0);
- 
+const [payments, setpayments] = useState([]);
  
 
   const getStatusColor = (status) => {
@@ -79,7 +79,20 @@ useEffect(() => {
       setLoading(false);
     }
   }
+
+
+  const  fetchpay = async () => {
+    try {
+      const response = await api.get('/backend/hotel_admin/payment/');
+      console.log(response.data);
+      setpayments(response.data);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
+  }
   fetchusers();
+  fetchpay();
   fetchBookings();
 }, []);
   const [recentBookings, setRecentBookings] = useState([]);
@@ -171,7 +184,7 @@ useEffect(() => {
             <div className="col-span-2">
               <UserRolesChart users={users} /> </div>
           </div>
-          <div className='pt-3'>  <SalesChart bookings={recentBookings} numDays={30} />   </div>
+          <div className='pt-3'>  <SalesChart payments={payments} numDays={30} />   </div>
     
 
         </main>

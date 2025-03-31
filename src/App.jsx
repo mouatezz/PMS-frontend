@@ -9,6 +9,7 @@ import Booking from './pages/booking.jsx'
 import RoomsContainer from './pages/Rooms/RoomsContainer.jsx'
 import AdminProfile from './pages/AdminProfile.jsx'
 import EventsActivities from './pages/EventsActivities.jsx'
+import Payment from './pages/Payment.jsx'
   function App() {
 
     return (
@@ -33,6 +34,10 @@ import EventsActivities from './pages/EventsActivities.jsx'
          
           <Route path="/profile" element={
            <AdminProfile />
+           }
+         />
+           <Route path="/payment" element={
+           <Payment />
            }
          />
           <Route path="/events" element={

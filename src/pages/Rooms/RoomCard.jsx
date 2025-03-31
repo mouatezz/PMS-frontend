@@ -16,7 +16,7 @@ const RoomCard = ({ room, onClick }) => {
 
   return (
     <div 
-      className="bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-700 cursor-pointer hover:border-amber-300 transition-colors max-h-80"
+      className="bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-700 cursor-pointer hover:border-amber-300 transition-colors"
       onClick={onClick}
     >
       <div className="flex flex-col md:flex-row">
@@ -24,7 +24,7 @@ const RoomCard = ({ room, onClick }) => {
           <img 
             src={room.images && room.images.length > 0 ? room.images[0].image : '/api/placeholder/400/320'}
             alt={room.room_type}
-            className="w-full h-48 md:h-full object-cover"
+            className="w-full h-48 md:h-72 object-cover"
           />
           <div className="absolute top-2 right-2 flex gap-2">
             {room.is_occupied && (
