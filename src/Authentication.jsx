@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, Key, User, Mail, Lock } from 'lucide-react';
+import { Building2, Key, User, Mail, Lock, UserCircle } from 'lucide-react';
 
 const Authentication = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -8,6 +8,7 @@ const Authentication = () => {
     password: '',
     confirmPassword: '',
     name: '',
+    role: 'receptionist' // Default role
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -19,13 +20,15 @@ const Authentication = () => {
     password: 'Password',
     confirmPassword: 'Confirm Password',
     name: 'Full Name',
+    role: 'Role',
     forgotPassword: 'Forgot Password?',
     noAccount: "Don't have an account?",
     haveAccount: 'Already have an account?',
     signUp: 'Sign Up',
     signIn: 'Sign In',
     welcomeBack: 'Welcome back',
-    createAccount: 'Create a new account'
+    createAccount: 'Create a new account',
+    selectRole: 'Select your role'
   };
 
   const handleSubmit = (e) => {
@@ -39,7 +42,10 @@ const Authentication = () => {
       return;
     }
 
+    // Use the selected role directly
     setTimeout(() => {
+      localStorage.setItem('userRole', formData.role);
+      localStorage.setItem('userEmail', formData.email);
       setLoading(false);
       window.location.href = '/dashboard';
     }, 1000);
@@ -145,6 +151,31 @@ const Authentication = () => {
               </div>
             </div>
           )}
+          
+          {/* Role selection dropdown - added for both login and registration */}
+          <div className="mb-5">
+            <label className="block text-white text-sm font-medium mb-1">{t.role}</label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <UserCircle className="h-5 w-5 text-amber-300" />
+              </div>
+              <select
+                name="role"
+                className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 border border-white/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 transition text-white placeholder-white/60 appearance-none"
+                value={formData.role}
+                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                required
+              >
+                <option value="receptionist" className="bg-gray-800 text-white">Receptionist</option>
+                <option value="admin" className="bg-gray-800 text-white">Administrator</option>
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
           
           {isLogin && (
             <div className="mb-5 text-right">

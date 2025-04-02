@@ -2,17 +2,15 @@ import React from 'react';
 import { 
   Building2, 
   Home,
-  Calendar, 
-  Users, 
-  BedDouble, // Rooms icon
-  UserCircle, // Admin Profile icon
+  Calendar,
+  ClipboardCheck,
   LogOut,
-  PartyPopper, // Events and Activities icon
+  DoorOpen,
   Menu,
   X
 } from 'lucide-react';
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
+const ReceptionistSidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const menuItems = [
     { 
       icon: Home, 
@@ -20,24 +18,19 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       href: '/dashboard' 
     },
     { 
-      icon: BedDouble, 
-      label: 'Rooms', 
-      href: '/rooms' 
+      icon: Calendar, 
+      label: 'Reservations', 
+      href: '/reservations' 
     },
     { 
-      icon: PartyPopper, 
-      label: 'Events and Activities', 
-      href: '/events-activities' 
+      icon: DoorOpen, 
+      label: 'Check In', 
+      href: '/check-in' 
     },
     { 
-      icon: Users, 
-      label: 'Users', 
-      href: '/users' 
-    },
-    { 
-      icon: UserCircle, 
-      label: 'Admin Profile', 
-      href: '/admin-profile' 
+      icon: ClipboardCheck, 
+      label: 'Check Out', 
+      href: '/check-out' 
     }
   ];
 
@@ -67,7 +60,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         <div className="p-4 flex items-center space-x-3 border-b border-gray-800">
           <Building2 className="h-6 w-6 text-amber-400" />
           <div>
-            <h1 className="text-lg font-medium text-white">Admin</h1>
+            <h1 className="text-lg font-medium text-white">Receptionist</h1>
             <p className="text-xs text-gray-400">
               {localStorage.getItem('userEmail')}
             </p>
@@ -116,4 +109,4 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   );
 };
 
-export default Sidebar;
+export default ReceptionistSidebar;
