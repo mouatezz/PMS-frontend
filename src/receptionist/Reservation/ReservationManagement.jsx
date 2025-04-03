@@ -282,10 +282,10 @@ const ReservationManagement = () => {
     if (!isOpen) return null;
     
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-gray-800 rounded-lg shadow-lg p-6 max-w-md w-full">
-          <h2 className="text-xl font-semibold text-white mb-4">Confirm Deletion</h2>
-          <p className="text-gray-300 mb-6">
+      <div className="fixed inset-0 bg-gray-100 bg-opacity-75 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Confirm Deletion</h2>
+          <p className="text-gray-700 mb-6">
             Are you sure you want to delete the reservation for{' '}
             <span className="font-medium">{reservation?.guest?.user?.fullname || 'this guest'}</span>?
             This action cannot be undone.
@@ -293,13 +293,13 @@ const ReservationManagement = () => {
           <div className="flex justify-end space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition duration-200"
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition duration-200"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition duration-200"
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition duration-200"
             >
               Delete
             </button>
@@ -310,26 +310,26 @@ const ReservationManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex">
       <ReceptionistSidebar 
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 
       />
       
       <div className="flex-1 md:ml-64">
-        <header className="bg-gray-800 shadow p-4">
+        <header className="bg-white shadow-sm p-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-semibold text-white">Reservations</h1>
+            <h1 className="text-xl font-semibold text-gray-800">Reservations</h1>
             <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white font-medium">
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800 font-medium">
                 R
               </div>
             </div>
           </div>
         </header>
         
-        <main className="p-6">
-          <div className="bg-gray-800 rounded-lg shadow-lg p-6">
+        <main className="p-6 bg-gray-50">
+          <div className="bg-white rounded-lg shadow-md p-6">
             <SearchBar
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
