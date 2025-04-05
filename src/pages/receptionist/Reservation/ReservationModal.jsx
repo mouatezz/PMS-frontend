@@ -1,0 +1,397 @@
+import React, { useState, useEffect } from 'react';
+import api from '../../../api';
+
+const ReservationModal = ({
+  isOpen,
+  onClose,
+  currentReservation,
+  formData,
+  setFormData,
+  handleInputChange,
+  handleSubmit,
+  rooms,
+  guests
+}) => {
+  const [guestSearch, setGuestSearch] = useState('');
+  const [roomSearch, setRoomSearch] = useState('');
+  const [showGuestDropdown, setShowGuestDropdown] = useState(false);
+  const [showRoomDropdown, setShowRoomDropdown] = useState(false);
+  const [isGuestValid, setIsGuestValid] = useState(true);
+  const [isRoomValid, setIsRoomValid] = useState(true);
+  const [datesSelected, setDatesSelected] = useState(false);
+  const [availableRooms, setAvailableRooms] = useState([]);
+  const [nights, setNights] = useState(0);
+  const [totalPrice, setTotalPrice] = useState(0);
+
+  useEffect(() => {
+    if (currentReservation) {
+      const currentGuest = guests.find(g => g.username === currentReservation.guest?.username);
+      setGuestSearch(currentGuest?.fullname || '');
+      
+      const currentRoom = rooms.find(r => r.roomID === currentReservation.room?.roomID);
+      setRoomSearch(currentRoom?.roomID || '');
+    }
+  }, [currentReservation, guests, rooms]);
+
+  const fetchAvailableRooms = async (checkIn, checkOut) => {
+    try {
+      // Fixed API call to send parameters correctly
+      const response = await api.get(`/backend/hotel_admin/availableRooms/?checkin=${checkIn}&checkout=${checkOut}`);
+      
+      let availableRoomsList = response.data || [];
+      
+      // Make sure response data is an array to avoid filter errors
+      if (!Array.isArray(availableRoomsList)) {
+        availableRoomsList = [];
+      }
+      
+      if (currentReservation && currentReservation.room) {
+        const currentRoomExists = availableRoomsList.some(room => room.roomID === currentReservation.room.roomID);
+        if (!currentRoomExists) {
+          const currentRoom = rooms.find(r => r.roomID === currentReservation.room.roomID);
+          if (currentRoom) {
+            availableRoomsList = [...availableRoomsList, currentRoom];
+          }
+        }
+      }
+      
+      setAvailableRooms(availableRoomsList);
+    } catch (error) {
+      console.error('Error fetching available rooms:', error);
+      // Fallback to showing all unoccupied rooms
+      setAvailableRooms(Array.isArray(rooms) ? rooms.filter(room => !room.is_occupied) : []);
+    }
+  };
+
+  useEffect(() => {
+    if (formData.check_in && formData.check_out) {
+      const checkIn = new Date(formData.check_in);
+      const checkOut = new Date(formData.check_out);
+      
+      if (checkIn && checkOut && checkOut > checkIn) {
+        const diffTime = checkOut - checkIn;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        setNights(diffDays);
+        setDatesSelected(true);
+        
+        // Format dates as YYYY-MM-DD for API
+        const formattedCheckIn = checkIn.toISOString().split('T')[0];
+        const formattedCheckOut = checkOut.toISOString().split('T')[0];
+        
+        fetchAvailableRooms(formattedCheckIn, formattedCheckOut);
+      } else {
+        setNights(0);
+        setDatesSelected(false);
+      }
+    } else {
+      setDatesSelected(false);
+    }
+  }, [formData.check_in, formData.check_out, currentReservation]);
+
+  useEffect(() => {
+    if (formData.room && nights > 0 && rooms && rooms.length > 0) {
+      const selectedRoom = rooms.find(r => r.roomID === formData.room);
+      if (selectedRoom) {
+        const calculatedPrice = selectedRoom.price * nights;
+        setTotalPrice(calculatedPrice);
+        
+        setFormData(prev => ({
+          ...prev,
+          num_of_nights: nights,
+          total_price: calculatedPrice
+        }));
+      }
+    } else {
+      setTotalPrice(0);
+    }
+  }, [formData.room, nights, rooms, setFormData]);
+
+  const filteredGuests = guests ? guests.filter(guest => 
+    guest.fullname?.toLowerCase().includes(guestSearch.toLowerCase()) ||
+    guest.username?.toLowerCase().includes(guestSearch.toLowerCase())
+  ) : [];
+
+  const filteredRooms = datesSelected && availableRooms ? availableRooms.filter(room => 
+    room.roomID?.toLowerCase().includes(roomSearch.toLowerCase()) ||
+    room.room_type?.toLowerCase().includes(roomSearch.toLowerCase()) ||
+    room.price?.toString().includes(roomSearch)
+  ) : [];
+
+  const handleGuestSelect = (guest) => {
+    setGuestSearch(guest.fullname || guest.username);
+    setIsGuestValid(true);
+    setShowGuestDropdown(false);
+    handleInputChange({ target: { name: 'guest', value: guest.username } });
+  };
+
+  const handleRoomSelect = (room) => {
+    setRoomSearch(room.roomID);
+    setIsRoomValid(true);
+    setShowRoomDropdown(false);
+    handleInputChange({ target: { name: 'room', value: room.roomID } });
+  };
+
+  const validateGuest = () => {
+    if (!guests || guests.length === 0) {
+      setIsGuestValid(false);
+      return;
+    }
+    
+    const isValid = guests.some(guest => 
+      (guest.fullname && guest.fullname.toLowerCase() === guestSearch.toLowerCase()) || 
+      (guest.username && guest.username.toLowerCase() === guestSearch.toLowerCase())
+    );
+    
+    setIsGuestValid(isValid);
+    if (!isValid) {
+      handleInputChange({ target: { name: 'guest', value: '' } });
+    }
+    
+    setTimeout(() => setShowGuestDropdown(false), 200);
+  };
+
+  const validateRoom = () => {
+    if (!availableRooms || availableRooms.length === 0) {
+      setIsRoomValid(false);
+      return;
+    }
+    
+    const isValid = availableRooms.some(room => 
+      (room.roomID && room.roomID.toLowerCase() === roomSearch.toLowerCase()) || 
+      (room.room_type && room.room_type.toLowerCase() === roomSearch.toLowerCase())
+    );
+    
+    setIsRoomValid(isValid);
+    if (!isValid) {
+      handleInputChange({ target: { name: 'room', value: '' } });
+    }
+    
+    setTimeout(() => setShowRoomDropdown(false), 200);
+  };
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!formData.guest || formData.guest === '') {
+      setIsGuestValid(false);
+      return;
+    }
+    
+    if (!formData.room || formData.room === '') {
+      setIsRoomValid(false);
+      return;
+    }
+    
+    if (!datesSelected) {
+      return;
+    }
+    
+    // Format dates as YYYY-MM-DD for backend
+    const checkIn = new Date(formData.check_in);
+    const checkOut = new Date(formData.check_out);
+    
+    const updatedFormData = {
+      ...formData,
+      check_in: checkIn.toISOString().split('T')[0],
+      check_out: checkOut.toISOString().split('T')[0],
+      num_of_nights: nights,
+      total_price: totalPrice
+    };
+    
+    setFormData(updatedFormData);
+    handleSubmit(e);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg p-6 max-w-3xl w-full max-h-screen overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-gray-800">
+            {currentReservation ? 'Edit Reservation' : 'New Reservation'}
+          </h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-800">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <form onSubmit={handleFormSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            {/* Guest Selection (Searchable) */}
+            <div className="relative">
+              <label className="block text-gray-700 mb-1">Guest</label>
+              <input
+                type="text"
+                value={guestSearch}
+                onChange={(e) => {
+                  setGuestSearch(e.target.value);
+                  setShowGuestDropdown(true);
+                }}
+                onFocus={() => setShowGuestDropdown(true)}
+                onBlur={validateGuest}
+                className={`w-full px-3 py-2 border ${isGuestValid ? 'border-gray-300' : 'border-red-500'} text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500`}
+                placeholder="Search guest by name or username..."
+                required
+              />
+              {!isGuestValid && <p className="text-red-500 text-sm mt-1">GUEST UNDEFINED</p>}
+              
+              {showGuestDropdown && guestSearch && guests && guests.length > 0 && (
+                <div className="absolute bg-white border border-gray-300 w-full mt-1 rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+                  {filteredGuests.length > 0 ? (
+                    filteredGuests.map((guest) => (
+                      <div
+                        key={guest.username}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleGuestSelect(guest);
+                        }}
+                        className="p-2 cursor-pointer hover:bg-amber-50"
+                      >
+                        <div className="font-medium">{guest.fullname}</div>
+                        <div className="text-sm text-gray-500">{guest.username}</div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-2 text-gray-500">No matches found</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* National ID */}
+            <div>
+              <label className="block text-gray-700 mb-1">National ID</label>
+              <input
+                type="text"
+                name="NationalID"
+                value={formData.NationalID || ''}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                required
+              />
+            </div>
+
+            {/* Check-in Date */}
+            <div>
+              <label className="block text-gray-700 mb-1">Check-in Date</label>
+              <input
+                type="date"
+                name="check_in"
+                value={formData.check_in || ''}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                required
+              />
+            </div>
+
+            {/* Check-out Date */}
+            <div>
+              <label className="block text-gray-700 mb-1">Check-out Date</label>
+              <input
+                type="date"
+                name="check_out"
+                value={formData.check_out || ''}
+                onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+                required
+              />
+            </div>
+
+            {/* Room Selection */}
+            <div className="relative">
+              <label className="block text-gray-700 mb-1">Room</label>
+              <input
+                type="text"
+                value={roomSearch}
+                onChange={(e) => {
+                  setRoomSearch(e.target.value);
+                  setShowRoomDropdown(true);
+                }}
+                onFocus={() => setShowRoomDropdown(true)}
+                onBlur={validateRoom}
+                className={`w-full px-3 py-2 border ${isRoomValid ? 'border-gray-300' : 'border-red-500'} 
+                  text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500
+                  ${!datesSelected ? 'bg-gray-200' : ''}`}
+                placeholder={datesSelected ? "Search room by ID, type, or price..." : "Select dates first"}
+                disabled={!datesSelected}
+                required
+              />
+              {!isRoomValid && <p className="text-red-500 text-sm mt-1">ROOM UNDEFINED</p>}
+              {!datesSelected && <p className="text-gray-500 text-sm mt-1">You must select dates first</p>}
+              
+              {showRoomDropdown && roomSearch && datesSelected && availableRooms && availableRooms.length > 0 && (
+                <div className="absolute bg-white border border-gray-300 w-full mt-1 rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
+                  {filteredRooms.length > 0 ? (
+                    filteredRooms.map((room) => (
+                      <div
+                        key={room.roomID}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          handleRoomSelect(room);
+                        }}
+                        className="p-2 cursor-pointer hover:bg-amber-50"
+                      >
+                        <div className="font-medium">Room {room.roomID} - {room.room_type}</div>
+                        <div className="text-sm text-gray-500">${room.price}/night</div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-2 text-gray-500">No available rooms match your search</div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Calculated Fields */}
+            <div>
+              <label className="block text-gray-700 mb-1">Nights</label>
+              <input
+                type="number"
+                value={nights}
+                className="w-full px-3 py-2 bg-gray-100 border border-gray-300 text-gray-800 rounded-md"
+                disabled
+              />
+            </div>
+            
+            <div>
+              <label className="block text-gray-700 mb-1">Total Price</label>
+              <input
+                type="text"
+                value={`$${totalPrice.toFixed(2)}`}
+                className="w-full px-3 py-2 bg-gray-100 border border-gray-300 text-gray-800 rounded-md"
+                disabled
+              />
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex justify-end space-x-3 mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium rounded-md transition duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={`px-4 py-2 ${
+                isGuestValid && isRoomValid && datesSelected 
+                  ? 'bg-amber-600 hover:bg-amber-700' 
+                  : 'bg-amber-300 cursor-not-allowed'
+              } text-white font-medium rounded-md transition duration-200`}
+              disabled={!isGuestValid || !isRoomValid || !datesSelected}
+            >
+              {currentReservation ? 'Update' : 'Create'} Reservation
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default ReservationModal;

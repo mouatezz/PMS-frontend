@@ -1,9 +1,9 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { UserPlus, Search, Filter, CheckCircle2, X, Plus } from 'lucide-react';
-import Sidebar from '../components/SideBar';
-import DataTable from '../components/DataTable';
-import api from '../api';
+import Sidebar from '../../components/SideBar';
+import DataTable from '../../components/DataTable';
+import api from '../../api';
 
 const Booking = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

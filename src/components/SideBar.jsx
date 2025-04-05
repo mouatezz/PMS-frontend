@@ -16,32 +16,32 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     { 
       icon: Home, 
       label: 'Dashboard', 
-      href: '/' 
+      href: '/admin' 
     },
     { 
       icon: BedDouble, 
       label: 'Rooms', 
-      href: '/rooms' 
+      href: '/admin/rooms' 
     },
     { 
       icon: Calendar, 
       label: 'Bookings', 
-      href: '/bookings' 
+      href: '/admin/bookings' 
     },
     { 
       icon: BarChart3, 
       label: 'Incomes',
-      href: '/payment' 
+      href: '/admin/payment' 
     },
     { 
       icon: Users, 
       label: 'Users', 
-      href: '/users' 
+      href: '/admin/users' 
     },
     { 
       icon: PartyPopper, 
       label: 'Events and Activities', 
-      href: '/events' 
+      href: '/admin/events' 
     }
   ];
 

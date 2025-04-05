@@ -8,7 +8,7 @@ if (typeof window !== 'undefined') {
 
 const ROOM_TYPES = [
   { value: 'standard', label: 'Standard' },
-  { value: 'deluxe', label: 'Deluxe' },
+  { value: 'twin', label: 'Twin' },
   { value: 'suite', label: 'Suite' },
   { value: 'quad', label: 'Quad' },
   { value: 'double', label: 'Double' },

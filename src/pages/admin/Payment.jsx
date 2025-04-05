@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { format, parseISO, getMonth, getYear } from 'date-fns';
-import Sidebar from '../components/SideBar';
-import DataTable from '../components/DataTable';
-import api from '../api';
+import Sidebar from '../../components/SideBar';
+import DataTable from '../../components/DataTable';
+import api from '../../api';
 
 const PaymentTotalsPopup = ({ isOpen, onClose, payments }) => {
   if (!isOpen) return null;

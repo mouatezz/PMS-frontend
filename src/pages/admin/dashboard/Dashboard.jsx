@@ -1,6 +1,6 @@
 import React, { useState , useEffect } from 'react';
-import Sidebar from '../../components/SideBar.jsx';
-import DataTable from '../../components/DataTable.jsx';
+import Sidebar from '../../../components/SideBar.jsx';
+import DataTable from '../../../components/DataTable.jsx';
 import { 
   HiOutlineBanknotes,
   HiOutlineBriefcase,
@@ -10,7 +10,7 @@ import {
 import UserRolesChart from './UserRolesChart.jsx';
 import Stat from './Stat.jsx';
 import SalesChart from './SalesChart.jsx';
-import api from '../../api.js';
+import api from '../../../api.js';
 import { format } from 'date-fns';
 
 
@@ -52,12 +52,11 @@ useEffect(() => {
       const response = await api.get('/backend/hotel_admin/reservations/');
       console.log(response.data);
       setRecentBookings(response.data);
-      const amount = response.data.reduce((acc, reservation) => acc + parseFloat(reservation.total_price), 0);
+      
       const checkins = response.data.filter(reservation => reservation.is_checked_in).length;
       const bookings = response.data.length;
       const occupency = (checkins / bookings) ;
       setTotalBookings(bookings);
-      setTotalAmount(amount);
       setTotalCheckins(checkins);
       setOccupancyRate(occupency);
 
@@ -86,6 +85,8 @@ useEffect(() => {
       const response = await api.get('/backend/hotel_admin/payment/');
       console.log(response.data);
       setpayments(response.data);
+      const amount = response.data.reduce((acc, payments) => acc + parseFloat(payments.amount), 0);
+      setTotalAmount(amount);
     } catch (err) {
       console.error(err);
       setLoading(false);

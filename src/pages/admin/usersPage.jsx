@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { UserPlus, Search, Filter, CheckCircle2, X } from 'lucide-react';
-import Sidebar from '../components/SideBar';
-import DataTable from '../components/DataTable';
-import api from '../api';
-import { ACCESS_TOKEN } from '../constants';
+import Sidebar from '../../components/SideBar';
+import DataTable from '../../components/DataTable';
+import api from '../../api';
 const UsersPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);

@@ -11,11 +11,6 @@ const Authentication = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    confirmPassword: '',
-    fullname : '',
-    email : '',
-    phone: '',
-    role:"admin",
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -42,38 +37,6 @@ const Authentication = () => {
     e.preventDefault();
     setLoading(true);
   
-    if (!isLogin) {
-      if (formData.password !== formData.confirmPassword) {
-        setError('Passwords do not match');
-        setLoading(false);
-        return;
-      } else {
-        try {
-          console.log(formData);
-          const res = await api.post('/backend/register/', {
-            "username": formData.username,
-            "password": formData.password,
-            "fullname": formData.fullname,
-            "email": formData.email,
-            "phone": formData.phone,
-            "role": formData.role,
-            "salary": 1000,
-          });
-          console.log(res);
-          setLoading(false);
-          navigate('/');
-        } catch (err) {
-          console.error(err);
-          if (err.response) {
-            setError(err.response.data.message || 'Registration failed');
-          } else {
-            console.error('Error message:', err.message);
-            setError(err.message);
-          }
-          setLoading(false);
-        }
-      }
-    } else {
       try {
         const res = await api.post('/backend/token/', {
           username: formData.username,
@@ -86,10 +49,11 @@ const Authentication = () => {
         localStorage.setItem('role', res.data.role);
         console.log(res.data);
         console.log(localStorage.getItem('access'));
-        console.log(localStorage.getItem('refresh'));
+        console.log(localStorage.getItem('role'));
         setLoading(false);
-        if (res.data.role === 'admin') {
-            navigate('/'); 
+        if (res.data.role === 'admin' || res.data.role === 'receptionist') {
+          navigate(`/${res.data.role}`);
+            
         } else {
           setError('You are not authorized to access this page');
           logout();
@@ -105,7 +69,7 @@ const Authentication = () => {
         }
         setLoading(false);
       }
-    }
+    
   };
 
   return (
@@ -186,73 +150,10 @@ const Authentication = () => {
             </div>
           </div>
           
-          {!isLogin && (
-            <div className="mb-5">
-              <label className="block text-white text-sm font-medium mb-1">{t.confirmPassword}</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Key className="h-5 w-5 text-amber-300" />
-                </div>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 border border-white/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 transition text-white placeholder-white/60"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  required={!isLogin}
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-          )}
           
-           {!isLogin && (
-            <div className="mb-5">
-              <label className="block text-white text-sm font-medium mb-1">phone number</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Key className="h-5 w-5 text-amber-300" />
-                </div>
-                <input
-                  type="int "
-                  name="phone"
-                  className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 border border-white/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 transition text-white placeholder-white/60"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  required={!isLogin}
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-          )}
-           {!isLogin && (
-            <div className="mb-5">
-              <label className="block text-white text-sm font-medium mb-1">email</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Key className="h-5 w-5 text-amber-300" />
-                </div>
-                <input
-                  type="email"
-                  name="email"
-                  className="w-full pl-10 px-4 py-3 rounded-lg bg-white/10 border border-white/30 focus:border-amber-400 focus:ring-2 focus:ring-amber-300/50 transition text-white placeholder-white/60"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required={!isLogin}
-                  placeholder="••••••••"
-                />
-              </div>
-            </div>
-          )}
           
-          {isLogin && (
-            <div className="mb-5 text-right">
-              <a href="/forgot-password" className="text-sm text-amber-300 hover:text-amber-100 transition">
-                {t.forgotPassword}
-              </a>
-            </div>
-          )}
           
+         
           <div className="mb-5">
             <button
               type="submit"

@@ -66,8 +66,8 @@ function UserRolesChart({ users }) {
             data={data}
             nameKey="role"
             dataKey="value"
-            innerRadius={isSmallScreen ? 50 : 70}
-            outerRadius={isSmallScreen ? 80 : 120}
+            innerRadius={isSmallScreen ? 40 : 60} 
+            outerRadius={isSmallScreen ? 70 : 100} 
             cx={isSmallScreen ? "50%" : "40%"}
             cy="50%"
             paddingAngle={2}
