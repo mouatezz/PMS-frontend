@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Modal from 'react-modal';
-import { X, Plus, Trash2, Upload , Check } from 'lucide-react';
+import { X, Plus, Trash2, Upload, Check } from 'lucide-react';
 import api from '../../api.js'
+import { use } from 'react';
 if (typeof window !== 'undefined') {
   Modal.setAppElement('#root');
 }
@@ -15,7 +16,28 @@ const ROOM_TYPES = [
   { value: 'triple', label: 'Triple' }
 ];
 
-const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onUpdateRoom ,fetchrooms }) => {
+const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onUpdateRoom, fetchrooms }) => {
+  
+  // Keep a constant list of all possible amenities
+  const [AMENITIES, setAMENITIES] = useState([
+    { id: 0, name: 'Loading...' },
+  ]);
+
+  const closed = () => {
+    getamenities();
+     onRequestClose();
+  };
+
+  const getamenities = async() =>{
+    try{
+    const response =await api.get('/backend/hotel_admin/amenities/');
+    console.log(response.data);
+    setAMENITIES(response.data);
+    }catch(err){
+        console.error(err);
+    }
+  }
+  
   const [formData, setFormData] = useState({
     roomID: '',
     room_type: 'standard',
@@ -28,11 +50,7 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
     description: '',
     amenities: []
   });
-  const AMENITIES = [
-    { id: 7, label: 'WiFi' },
-    { id: 8, label: 'TV' },
-    { id: 9, label: 'Air Conditioning' },
-  ];
+
   const handleAmenityToggle = (amenityId) => {
     setFormData(prev => {
       const currentAmenities = [...(prev.amenities || [])];
@@ -51,21 +69,71 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
     });
   };
 
-
-
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
-  const [imageurls,setimageurls] =useState([]);
+  const [imageurls, setimageurls] = useState([]);
+
   useEffect(() => {
+   
     if (selectedRoom) {
+      // Extract amenity IDs from the new format
+      const amenityIds = [];
+      
+      if (selectedRoom.amenities && Array.isArray(selectedRoom.amenities)) {
+        selectedRoom.amenities.forEach(amenity => {
+          // Handle the new array format [id, label]
+          if (Array.isArray(amenity) && amenity.length >= 2) {
+            const amenityId = Number(amenity[0]);
+            if (!isNaN(amenityId)) {
+              amenityIds.push(amenityId);
+            }
+          }
+          // Keep previous formats for backward compatibility
+          else if (!isNaN(Number(amenity))) {
+            amenityIds.push(Number(amenity));
+          }
+          else if (amenity && typeof amenity === 'object' && !isNaN(Number(amenity.id))) {
+            amenityIds.push(Number(amenity.id));
+          }
+        });
+      }
+      
+      // Update AMENITIES with any new items from the backend, but don't replace the whole list
+      if (selectedRoom.amenities && Array.isArray(selectedRoom.amenities)) {
+        const newAmenities = [...AMENITIES]; // Start with current list
+        
+        selectedRoom.amenities.forEach(amenity => {
+          if (Array.isArray(amenity) && amenity.length >= 2) {
+            const amenityId = Number(amenity[0]);
+            const amenityLabel = amenity[1];
+            
+            // Check if this amenity already exists in our list
+            const existingIndex = newAmenities.findIndex(item => item.id === amenityId);
+            
+            if (existingIndex === -1) {
+              // If not found, add it to our list
+              newAmenities.push({ id: amenityId, label: amenityLabel });
+            }
+          }
+        });
+        
+        // Only update if we have new amenities
+        if (newAmenities.length > AMENITIES.length) {
+          setAMENITIES(newAmenities);
+        }
+      }
+      
       setFormData({
         ...selectedRoom,
-        price: parseFloat(selectedRoom.price),
+        price: parseFloat(selectedRoom.price || 0),
+        amenities: amenityIds,
         images: selectedRoom.images || []
       });
-      setImagePreviews(selectedRoom.images?.map(image => ({ id: image.id, image :image.image })) || []);
+      
+      setImagePreviews(selectedRoom.images?.map(image => ({ id: image.id, image: image.image })) || []);
       setImageFiles([]);
     } else {
+      // Reset form for adding new room
       setFormData({
         roomID: '',
         room_type: 'standard',
@@ -76,12 +144,14 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
         requestCleaning: false,
         requestMaintenance: false,
         description: '',
-        amenities:[]
+        amenities: []
       });
       setImagePreviews([]);
       setImageFiles([]);
     }
   }, [selectedRoom, isOpen]);
+useEffect(() => {
+  getamenities();}, []);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -112,9 +182,8 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
       ...prevRoom,
       images: prevRoom.images.filter(image => image.id !== id)
     }));
-    setimageurls([...imageurls, { id: id }])
-    console.log(imageurls)
-   
+    setimageurls([...imageurls, { id: id }]);
+    
     const previewIndex = imagePreviews.findIndex(preview => preview.id === id);
     if (previewIndex < imageFiles.length) {
       setImageFiles(prev => {
@@ -124,75 +193,80 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
       });
     }
   };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
-    onRequestClose();
     const data = new FormData();
-   
-
+    const amenityIds = formData.amenities.filter(id => !isNaN(Number(id))).map(id => Number(id));
+    
     Object.keys(formData).forEach((key) => {
       if (key === 'amenities') {
-         formData[key].forEach(amenityId => {
-            data.append('amenities', amenityId);
-        });
-      } else {
-          data.append(key, formData[key]);
+      } else { 
+        data.append(key,formData[key]);
       }
-  });
+    });
+    if (amenityIds.length > 0){
+    amenityIds.forEach(id => {
+      data.append('amenities', id);
+    });
+  }else{
+    data.append('amenities', "CLEAR");
+  }
+
+
 
     imageFiles.forEach((file) => {
-        data.append('images', file);
+      data.append('images', file);
     });
     
-
     try {
+      console.log("Submitting form data:");
       for (let pair of data.entries()) {
         console.log(pair[0], pair[1]);
-    }
-if (selectedRoom) {
-  const response = await api.put(`/backend/hotel_admin/rooms/${selectedRoom.roomID}/`, data, {
-      headers: {
-          'Content-Type': 'multipart/form-data'
       }
-  });
-  
-  if (imageurls.length > 0) {
-      const deleteResponse = await api.delete('/backend/hotel_admin/roomimages/', {
-          data: { urls: imageurls } 
-      });
+      
+      close();
+    
+      if (selectedRoom) {
+        console.log(data);
+        const response = await api.put(`/backend/hotel_admin/rooms/${selectedRoom.roomID}/`, data, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      ); 
+      
+      console.log("Response:", response.body); 
+        
+        if (imageurls.length > 0) {
+          const deleteResponse = await api.delete('/backend/hotel_admin/roomimages/', {
+            data: { urls: imageurls } 
+          });
           console.log("Response:", response.body);
           console.log("Delete response:", deleteResponse.body);
-      
-  } 
-  if (response.status==400 ||  response.status==500){
-    alert('Failed to update room !')
-  }
-  fetchrooms();
-
-} else {
-  const response = await api.post('/backend/hotel_admin/rooms/', data, {
-      headers: {
-          'Content-Type': 'multipart/form-data'
-      }
-  });
-  onRequestClose();
-  fetchrooms();
-
-      console.log("Response:", response.body);
-
-        if (response.status==400 ||  response.status==500){
-          alert('Failed to create room !')
+        } 
+        
+        if (response.status == 400 || response.status == 500) {
+          alert('Failed to update room!');
         }
-  
-}
+        fetchrooms();
+      } else {
+        const response = await api.post('/backend/hotel_admin/rooms/', data, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        fetchrooms();
+        console.log("Response:", response.body);
+
+        if (response.status == 400 || response.status == 500) {
+          alert('Failed to create room!');
+        }
+      }
     } catch (error) {
       console.log(error);
-  
     }
-
-    
-};
-
+  };
 
   return (
     <Modal
@@ -206,7 +280,7 @@ if (selectedRoom) {
           {selectedRoom ? 'Edit Room' : 'Add New Room'}
         </h2>
         <button
-          onClick={onRequestClose}
+          onClick={closed}
           className="text-gray-400 hover:text-white transition-colors"
         >
           <X className="w-6 h-6" />
@@ -333,7 +407,6 @@ if (selectedRoom) {
           </div>
         </div>
 
-
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
           <textarea
@@ -345,35 +418,34 @@ if (selectedRoom) {
           />
         </div>
 
-          {/* Amenities Section */}
-<div>
-  <label className="block text-sm font-medium text-gray-300 mb-3">Amenities</label>
-  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-    {AMENITIES.map(amenity => (
-      <div 
-        key={amenity.id} 
-        className={`
-          flex items-center p-3 border rounded-md cursor-pointer
-          ${formData.amenities?.includes(amenity.id) 
-            ? 'border-amber-400 bg-amber-400 bg-opacity-10' 
-            : 'border-gray-600 hover:border-gray-500'}
-        `}
-        onClick={() => handleAmenityToggle(amenity.id)}
-      >
-        {/* Checkbox-like element */}
-        <div className={`checkbox-style ${formData.amenities?.includes(amenity.id) ? 'checked' : ''}`}>
-          {formData.amenities?.includes(amenity.id) && <Check size={16} />}
+        {/* Amenities Section */}
+        <div>
+          <label className="block text-sm font-medium text-gray-300 mb-3">Amenities</label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {AMENITIES.map(amenity => (
+              <div 
+                key={amenity.id} 
+                className={`
+                  flex items-center p-3 border rounded-md cursor-pointer
+                  ${formData.amenities.includes(amenity.id) 
+                    ? 'border-amber-400 bg-amber-400 bg-opacity-10' 
+                    : 'border-gray-600 hover:border-gray-500'}
+                `}
+                onClick={() => handleAmenityToggle(amenity.id)}
+              >
+                <div className={`checkbox-style ${formData.amenities.includes(amenity.id) ? 'checked' : ''}`}>
+                  {formData.amenities.includes(amenity.id) && <Check size={16} />}
+                </div>
+                <span className="ml-2 text-sm text-gray-300">{amenity.name}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <span className="ml-2 text-sm text-gray-300">{amenity.label}</span>
-      </div>
-    ))}
-  </div>
-</div>
 
         <div className="flex flex-col md:flex-row justify-end gap-4 mt-6">
           <button
             type="button"
-            onClick={onRequestClose}
+            onClick={closed}
             className="px-4 py-2 text-gray-300 border border-gray-600 rounded-md hover:bg-gray-700 transition-colors w-full md:w-auto"
           >
             Cancel
@@ -383,7 +455,6 @@ if (selectedRoom) {
             className="px-4 py-2 bg-amber-300 text-gray-900 rounded-md hover:bg-amber-400 transition-colors w-full md:w-auto"
           >
             {selectedRoom ? 'Save Changes' : 'Add Room'}
-            
           </button>
         </div>
       </form>

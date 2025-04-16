@@ -16,15 +16,20 @@ import {
 import api from '../../api';
 import { data } from 'react-router-dom';
 import { set } from 'date-fns';
+import QRCodePopup from '../../components/QRCodePopup'
 const CheckInPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [pay, setPay] = useState(false);
-  const [payment, setPayment] = useState([{
+  const [showQR, setShowQR] = useState(false);
+  const [payment, setPayment] = useState({
     amount: 0,
     type: "stay",
     payment_method: "cash",
-  }]);
+});
+
+
+  
   const [showGuestForm, setShowGuestForm] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [expectedCheckIns , setexpectedCheckIns] = useState([])
@@ -55,10 +60,10 @@ const CheckInPage = () => {
           })),
           payment: pay ? payment : [], 
         };
+
         console.log(data);
-        const response = await api.post(`/backend/hotel_admin/checkins/`, data);
+        const response = await api.post(`/backend/receptionist/checkins/`, data);
         console.log(response.data);
-        setShowGuestForm(false);
         setPay(false);
         setPayment({
           amount: 0,
@@ -74,7 +79,7 @@ const CheckInPage = () => {
     };
     const fetchReservations = async () => {
       try {
-        const response = await api.get('/backend/hotel_admin/checkins/');
+        const response = await api.get('/backend/receptionist/checkins/');
         console.log(response.data);
         setexpectedCheckIns(response.data);
       } catch (err) {
@@ -253,6 +258,8 @@ const CheckInPage = () => {
                           defaultValue={selectedReservation?.guest.username || ''}
                         />
                       </div>
+                      {selectedReservation && (
+                        <>
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">Full Name</label>
                         <input
@@ -276,7 +283,8 @@ const CheckInPage = () => {
                           className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
                           defaultValue={selectedReservation?.guest.phone || ''}
                         />
-                      </div>
+                      </div></>
+                      )}
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">National ID</label>
                         <input
@@ -302,6 +310,7 @@ const CheckInPage = () => {
                           defaultValue={selectedReservation?.room.roomID || ''}
                         />
                       </div>
+                      {selectedReservation && (
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">Room Type</label>
                         <select 
@@ -313,21 +322,39 @@ const CheckInPage = () => {
                           <option value="suite">Suite</option>
                         </select>
                       </div>
+                      )}
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">Check-in Date</label>
+                        {!selectedReservation ?(
+                          <input 
+                          type="date"
+                          className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        
+                          OnChange={(e) => setSelectedReservation({...selectedReservation, check_in: e.target.value})}></input>
+                          ):( 
                         <div
                           className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
                           
                         > {selectedReservation?.check_in.split('T')[0]}
-                      </div> </div>
+                      </div> 
+                      )}
+                       </div>
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">Check-out Date</label>
-                        <div
+                        {!selectedReservation ? (
+                          <input 
+                          type="date"
+                          className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+                        
+                          onChange={(e) => setSelectedReservation({...selectedReservation, check_out: e.target.value})}></input>
+                        ) : (                        
+                          <div
                           className="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
                           
-                        >
-                        {selectedReservation?.check_out.split('T')[0] || ''}
-                      </div> </div>
+                        >  {selectedReservation?.check_out.split('T')[0] || ''}
+                      </div> 
+                        )}
+                            </div>
                       <div>
                         <label className="block text-sm text-gray-600 mb-1">Number of Nights</label>
                         <input
@@ -523,12 +550,21 @@ const CheckInPage = () => {
                   className="px-6 py-2 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg flex items-center space-x-2 transition-colors"
                   onClick ={() => {
                     handleCheckIn(selectedReservation.reservationID) ;
-                    
+                    setShowQR(true);
                   }}
                 >
-                  <CheckCircle2 className="h-5 w-5" />
+                  <CheckCircle2 className="h-3 w-5" />
                   <span>Complete Check-in</span>
                 </button>
+                {showQR && (
+                  <QRCodePopup 
+          reservationId={selectedReservation.reservationID}
+          username={selectedReservation.guest.username}
+          roomId={selectedReservation.room.roomID}
+          onClose={() => setShowQR(false)}  
+          onClose2={() =>  setShowGuestForm(false)}
+        />
+      )}
               </div>
             </div>
           )}

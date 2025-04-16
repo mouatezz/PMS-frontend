@@ -1,4 +1,4 @@
-import React, { useState  ,useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../../components/SideBar';
 import api from '../../api.js'
 import { 
@@ -22,9 +22,12 @@ const EventsActivities = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('All');
   const [editingEventId, setEditingEventId] = useState(null);
-  const [backimage , setbackimage]=useState(null)
+  const [backimage, setbackimage] = useState(null);
+  // Add new state for delete confirmation modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
+  
   const [newEvent, setNewEvent] = useState({
-
     name: '',
     date: '',
     time: '',
@@ -40,12 +43,10 @@ const EventsActivities = () => {
       date: '2024-07-15',
       time: '14:00',
       location: 'Hotel Pool Area',
-      
       imageUrl: 'https://as2.ftcdn.net/v2/jpg/03/86/13/33/1000_F_386133321_K9KI3XQ0HHco4mgJNlPCbNvqCICrzCw9.jpg',
       description: 'Enjoy a refreshing afternoon by the pool with music and refreshments.'
     },
   ]);
-
 
   const getevents = async () => {
     try {
@@ -57,11 +58,9 @@ const EventsActivities = () => {
     }
   };
 
-  useEffect(() =>{
+  useEffect(() => {
      getevents()
   }, []);
-
- 
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -74,7 +73,7 @@ const EventsActivities = () => {
     };
   };
 
-  const editevent =async(e , eventId)=>{
+  const editevent = async(e, eventId) => {
     e.preventDefault()
     const formData = new FormData();
     formData.append("id", eventId); 
@@ -89,13 +88,13 @@ const EventsActivities = () => {
         console.log(`${pair[0]}:`, pair[1]);
       }
       console.log();
-      const response = await api.put(`/backend/hotel_admin/event/${eventId}` ,formData ,{
+      const response = await api.put(`/backend/hotel_admin/event/${eventId}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
       console.log(response.data);
-      setEvents(response.data);
+      getevents();
     } catch (err) {
       console.error(err);
     }
@@ -114,18 +113,16 @@ const EventsActivities = () => {
       console.log(`${pair[0]}:`, pair[1]);
     }
     try {
-      
       console.log();
-      const response = await api.post(`/backend/hotel_admin/event/` ,formData ,{
+      const response = await api.post(`/backend/hotel_admin/event/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      }
-    );
+      });
       getevents()
       console.log(response.data);
       if (response.status != 200){
-           alert('failed to create event !')
+           alert('failed to create event!')
       }
     } catch (err) {
       console.error(err);
@@ -141,39 +138,47 @@ const EventsActivities = () => {
     }]);
     setShowModal(false);
   };
+  
   const combineDateTime = (date, time) => {
     return `${date}T${time}:00Z`; 
   };
+  
   const handleEditEvent = (eventId) => {
-    
     const eventToEdit = events.find(event => event.id === eventId);
     if (eventToEdit) {
       setNewEvent({ ...eventToEdit });
       setEditingEventId(eventId);
       setShowModal(true);
     }
-  
-    
   };
+  
   const handleimageUpload = (e) => { 
     const file = e.target.files[0];
     if (file) {
       setbackimage(file); 
-     
     }
   };
-  const handleDeleteEvent = async(eventId) => {
-   
-    try {
-      console.log();
-      const response = await api.delete(`/backend/hotel_admin/event/${eventId}` , 
-      );
-      console.log(response.data);
-      getevents()
-    } catch (err) {
-      console.error(err);
+  
+  // Updated to show the delete confirmation modal
+  const handleDeleteEvent = (eventId) => {
+    const event = events.find(event => event.id === eventId);
+    setEventToDelete(event);
+    setIsDeleteModalOpen(true);
+  };
+  
+  // New function to confirm and perform deletion
+  const confirmDeleteEvent = async () => {
+    if (eventToDelete) {
+      try {
+        const response = await api.delete(`/backend/hotel_admin/event/${eventToDelete.id}`);
+        console.log(response.data);
+        getevents();
+        setIsDeleteModalOpen(false);
+        setEventToDelete(null);
+      } catch (err) {
+        console.error(err);
+      }
     }
-    setEvents(events.filter(event => event.id !== eventId));
   };
 
   const filteredEvents = events.filter(event => {
@@ -186,6 +191,38 @@ const EventsActivities = () => {
     
     return matchesSearch && matchesType;
   });
+  
+  // Delete confirmation modal component
+  const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, event }) => {
+    if (!isOpen) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+        <div className="bg-gray-800 rounded-lg shadow-md p-6 max-w-md w-full border border-gray-700">
+          <h2 className="text-xl font-semibold text-white mb-4">Delete Event</h2>
+          <p className="text-gray-300 mb-6">
+            Are you sure you want to delete the event "{event?.name}"?
+            This action cannot be undone.
+          </p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md transition duration-200"
+            >
+              Delete Event
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex">
       <Sidebar 
@@ -289,7 +326,6 @@ const EventsActivities = () => {
                     <div className="mt-4 flex justify-end space-x-2">
                       <button 
                         onClick={() => handleEditEvent(event.id)}
-
                         className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 p-2 rounded-md transition-colors"
                       >
                         <Edit className="h-5 w-5" />
@@ -395,27 +431,25 @@ const EventsActivities = () => {
                   />
                 </div>
 
-                
-
                 <div>
-                <div className="mt-2 border-2 border-dashed border-amber-400 rounded-md p-6 text-center">
-            <label className="cursor-pointer block w-full">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleimageUpload}
-                className="hidden"
-                multiple
-              />
-              <Upload className="mx-auto w-8 h-8 text-gray-400 mb-2" />
-              <span className="text-sm text-gray-400 block">
-                Drag and drop images or click to browse
-              </span>
-              <span className="text-xs text-gray-500 block mt-1">
-                JPG, PNG, GIF up to 5MB
-              </span>
-            </label>
-          </div>
+                  <div className="mt-2 border-2 border-dashed border-amber-400 rounded-md p-6 text-center">
+                    <label className="cursor-pointer block w-full">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleimageUpload}
+                        className="hidden"
+                        multiple
+                      />
+                      <Upload className="mx-auto w-8 h-8 text-gray-400 mb-2" />
+                      <span className="text-sm text-gray-400 block">
+                        Drag and drop images or click to browse
+                      </span>
+                      <span className="text-xs text-gray-500 block mt-1">
+                        JPG, PNG, GIF up to 5MB
+                      </span>
+                    </label>
+                  </div>
                 </div>
 
                 <div>
@@ -449,6 +483,14 @@ const EventsActivities = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDeleteEvent}
+        event={eventToDelete}
+      />
     </div>
   );
 };

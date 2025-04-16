@@ -32,11 +32,6 @@ const RoomsContainer = () => {
       description: "Charming nautical theme.",
      
       amenities: [
-        "Free Wi-Fi",
-        "Air Conditioning",
-        "Flat-screen TV",
-        "Mini Fridge",
-        "Coffee Maker"
       ],
       images: [
         { id: 1, image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?q=80&w=1470&auto=format&fit=crop" },
@@ -51,7 +46,7 @@ const fetchrooms = async () => {
   try {
     const response = await api.get('/backend/hotel_admin/getRoom/');
     console.log(response.data);
-   setRooms(response.data)
+    setRooms(response.data)
    setAddEditModalIsOpen(false);
   } catch (err) {
     console.error(err);
@@ -144,7 +139,7 @@ const fetchrooms = async () => {
         onAddRoom={handleAddRoom}
         onUpdateRoom={handleUpdateRoom}
         setSelectedRoom={setSelectedRoom}
-        fetchRooms={fetchrooms}
+        fetchrooms={fetchrooms}
       />
 
           <RoomFilters 

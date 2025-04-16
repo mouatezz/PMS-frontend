@@ -78,9 +78,7 @@ const Authentication = () => {
       <div className="absolute inset-0 bg-black bg-opacity-50"></div>
       <div className="relative z-10 backdrop-blur-md bg-white/20 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-white/30">
         <div className="text-center mb-6">
-          <div className="flex justify-center mb-2">
-            <Building2 className="h-10 w-10 text-amber-400" />
-          </div>
+          
           <h1 className="text-3xl font-extrabold text-white">PMS</h1>
           <p className="text-amber-200 mt-1 text-sm">Property Management System</p>
         </div>

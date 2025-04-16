@@ -12,33 +12,20 @@ const ReservationManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [reservationToDelete, setReservationToDelete] = useState(null);
+  const [reservationToCancel, setReservationToCancel] = useState(null);
   const [currentReservation, setCurrentReservation] = useState(null);
   const [guests, setGuests] = useState([]);
-  const [rooms, setRooms] = useState([]); // Added rooms state back
-  const [reservations, setReservations]= useState(
-    [
-      {
-        reservationID: 1,
-        guest: 'John Doe' ,
-        NationalID: 'ABC123456',
-        room:'R101',
-        check_in: '2025-03-22T14:00:00',
-        check_out: '2025-03-25T12:00:00',
-        num_of_nights: 3,
-        total_price: 450.00,
-        is_checked_in: true,
-        is_checked_out: false,
-        is_cancelled: false,
-        guest_companions: [
-          { fullname: 'Jane Doe', NationalID: 'XYZ987654', phone: '555-1234' }
-        ],
-        payments: [
-          { paymentID: 'PAY001', payment_method: 'credit', amount: 450.00, date: '2025-03-20T10:30:00' }
-        ]
-      }
-    ]
-  );
+  const [rooms, setRooms] = useState([]); 
+  const [reservations, setReservations] = useState([]);
+  
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [totalItems, setTotalItems] = useState(0);
+
   const [formData, setFormData] = useState({
     guest: '',
     NationalID: '',
@@ -52,17 +39,31 @@ const ReservationManagement = () => {
     is_cancelled: false,
     companions: []
   });
+  
   const [companionData, setCompanionData] = useState({
     fullname: '',
     NationalID: '',
     phone: ''
   });
 
-  const fetchReservations = async () => {
+  const fetchReservations = async (page = 1) => {
     try {
-      const response = await api.get('/backend/hotel_admin/reservations/');
+      const response = await api.get('/backend/receptionist/reservationPagination/', {
+        params: {
+          page: page,
+          limit: itemsPerPage
+        }
+      });
+      
+      // Assuming the backend returns data in this format
+      // { data: [...reservations], total: totalCount, pages: totalPages }
       console.log(response.data);
-      setReservations(response.data);
+      
+      // If your backend doesn't return pagination info, adjust accordingly
+      setReservations(response.data.data || response.data);
+      setTotalItems(response.data.total || response.data.length);
+      setTotalPages(response.data.pages || Math.ceil((response.data.total || response.data.length) / itemsPerPage));
+      setCurrentPage(page);
     } catch (err) {
       console.error(err);
     }
@@ -79,10 +80,10 @@ const ReservationManagement = () => {
   };
 
   useEffect(() => {   
-    fetchReservations();  
+    fetchReservations(currentPage);  
     fetchGuests();
-    fetchRooms(); // Added fetchRooms call
-  }, []);
+    fetchRooms();
+  }, [currentPage, itemsPerPage]);
 
   const fetchGuests = async () => {
     try {
@@ -99,9 +100,9 @@ const ReservationManagement = () => {
     
     if (searchTerm) {
       filtered = filtered.filter(res => 
-        res.guest.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.room.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        res.NationalID.toLowerCase().includes(searchTerm.toLowerCase())
+        res.guest?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        res.room?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        res.NationalID?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -125,6 +126,13 @@ const ReservationManagement = () => {
     setFilteredReservations(filtered);
   }, [searchTerm, statusFilter, reservations]);
 
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      fetchReservations(newPage);
+    }
+  };
+
   const handleAddReservation = () => {
     setCurrentReservation(null);
     setFormData({
@@ -141,19 +149,28 @@ const ReservationManagement = () => {
 
   const handleEditReservation = (reservation) => {
     setCurrentReservation(reservation);
+    const checkInDate = reservation.check_in?.includes('T') 
+      ? reservation.check_in.split('T')[0] 
+      : reservation.check_in;
+      
+    const checkOutDate = reservation.check_out?.includes('T') 
+      ? reservation.check_out.split('T')[0] 
+      : reservation.check_out;
+    
     setFormData({
-      guest: reservation.guest,
-      NationalID: reservation.NationalID,
-      room: reservation.room.roomID,
-      check_in: reservation.check_in.slice(0, 16),
-      check_out: reservation.check_out.slice(0, 16),
+      guest: typeof reservation.guest === 'object' ? reservation.guest.username : reservation.guest,
+      NationalID: reservation.NationalID || '',
+      room: typeof reservation.room === 'object' ? reservation.room.roomID : reservation.room,
+      check_in: checkInDate,
+      check_out: checkOutDate,
       num_of_nights: reservation.num_of_nights,
       total_price: reservation.total_price,
-      is_checked_in: reservation.is_checked_in,
-      is_checked_out: reservation.is_checked_out,
-      is_cancelled: reservation.is_cancelled,
+      is_checked_in: reservation.is_checked_in || false,
+      is_checked_out: reservation.is_checked_out || false,
+      is_cancelled: reservation.is_cancelled || false,
       companions: reservation.guest_companions || []
     });
+    
     setIsModalOpen(true);
   };
 
@@ -165,9 +182,9 @@ const ReservationManagement = () => {
 
   const confirmDeleteReservation = async () => {
     if (reservationToDelete) {
-      const response = await api.delete(`backend/hotel_admin/ManageReservation/${reservationToDelete.reservationID}`);
+      const response = await api.delete(`backend/receptionist/ManageReservation/${reservationToDelete.reservationID}`);
       console.log(response.data);
-      fetchReservations();
+      fetchReservations(currentPage);
       setIsDeleteModalOpen(false);
       setReservationToDelete(null);
     }
@@ -180,11 +197,25 @@ const ReservationManagement = () => {
         : res
     ));
   };
-
-  const handleCancel = async(reservationID) => {
-    const response = await api.post(`backend/hotel_admin/ManageReservation/${reservationID}`);
-    console.log(response.data);
-    fetchReservations();
+  
+  const handleCancelReservation = (reservationID) => {
+    const reservation = reservations.find(res => res.reservationID === reservationID);
+    setReservationToCancel(reservation);
+    setIsCancelModalOpen(true);
+  };
+  
+  const confirmCancelReservation = async () => {
+    if (reservationToCancel) {
+      try {
+        const response = await api.post(`backend/receptionist/ManageReservation/${reservationToCancel.reservationID}`);
+        console.log(response.data);
+        fetchReservations(currentPage);
+        setIsCancelModalOpen(false);
+        setReservationToCancel(null);
+      } catch (error) {
+        console.error('Error cancelling reservation:', error);
+      }
+    }
   };
 
   const handleInputChange = (e) => {
@@ -195,22 +226,20 @@ const ReservationManagement = () => {
     }));
   };
 
-
-
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     try {
       if (currentReservation) {
-        const response = await api.put(`backend/hotel_admin/ManageReservation/${currentReservation.reservationID}`, formData);
+        console.log(formData)
+        const response = await api.put(`backend/receptionist/ManageReservation/${currentReservation.reservationID}`, formData);
         console.log('Updated reservation:', response.data);
       } else {
         console.log('Creating new reservation:', formData);
-        const response = await api.post('backend/hotel_admin/reservations/', formData);
+        const response = await api.post('backend/receptionist/reservations/', formData);
         console.log('Created reservation:', response.data);
       }
-      fetchReservations();
+      fetchReservations(currentPage);
       setIsModalOpen(false);
     } catch (error) {
       console.error('Error submitting reservation:', error);
@@ -248,6 +277,67 @@ const ReservationManagement = () => {
     );
   };
 
+  const CancelConfirmationModal = ({ isOpen, onClose, onConfirm, reservation }) => {
+    if (!isOpen) return null;
+    
+    return (
+      <div className="fixed inset-0 bg-gray-100 bg-opacity-75 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-md p-6 max-w-md w-full">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Confirm Cancellation</h2>
+          <p className="text-gray-700 mb-6">
+            Are you sure you want to cancel the reservation for{' '}
+            <span className="font-medium">{reservation?.guest || 'this guest'}</span>?
+            This action cannot be undone.
+          </p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md transition duration-200"
+            >
+              No, Keep Reservation
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md transition duration-200"
+            >
+              Yes, Cancel Reservation
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Pagination component with blue buttons
+  const Pagination = () => {
+    return (
+      <div className="flex justify-between items-center mt-6 px-2">
+        <div className="text-sm text-gray-600">
+          Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} reservations
+        </div>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md transition duration-200 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="flex items-center px-4 font-medium">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md transition duration-200 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white flex">
       <ReceptionistSidebar 
@@ -275,10 +365,13 @@ const ReservationManagement = () => {
             <ReservationTable
               filteredReservations={filteredReservations}
               handleCheckIn={handleCheckIn}
-              handleCancel={handleCancel}
+              handleCancelReservation={handleCancelReservation}
               handleEditReservation={handleEditReservation}
               handleDeleteReservation={handleDeleteReservation}
             />
+            
+            {/* Add the pagination component */}
+            <Pagination />
           </div>
           
           <ReservationModal
@@ -299,10 +392,17 @@ const ReservationManagement = () => {
             onConfirm={confirmDeleteReservation}
             reservation={reservationToDelete}
           />
+          
+          <CancelConfirmationModal
+            isOpen={isCancelModalOpen}
+            onClose={() => setIsCancelModalOpen(false)}
+            onConfirm={confirmCancelReservation}
+            reservation={reservationToCancel}
+          />
         </main>
       </div>
     </div>
-  );
-};
+  ); 
+}; 
 
 export default ReservationManagement;

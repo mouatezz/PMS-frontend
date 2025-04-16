@@ -86,12 +86,12 @@ const [backimage , setbackimage]= useState(null)
         setSidebarOpen={setSidebarOpen} 
       />
 
-      <div className="flex-1 md:ml-64 p-6">
+      <div className="flex-1 md:ml-64 ">
         <main className="h-screen flex flex-col">
           <div className="flex-1 bg-gray-900 overflow-y-auto">
             <div className="max-w-6xl mx-auto">
               <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
-                <div className="h-40 bg-gradient-to-r from-amber-500 to-amber-300 relative">
+                <div className="h-40 bg-gradient-to-r from-gray-900 to-black relative">
                   <div className="absolute -bottom-16 left-8">
                     <div className="relative">
                       <div className="w-32 h-32 rounded-full border-4 border-gray-800 overflow-hidden bg-gray-700 flex items-center justify-center">

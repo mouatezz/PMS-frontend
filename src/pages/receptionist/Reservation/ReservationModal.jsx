@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../api';
+import { CheckCircle } from 'lucide-react';
 
 const ReservationModal = ({
   isOpen,
@@ -10,8 +11,7 @@ const ReservationModal = ({
   handleInputChange,
   handleSubmit,
   rooms,
-  guests
-}) => {
+  guests  }) => {
   const [guestSearch, setGuestSearch] = useState('');
   const [roomSearch, setRoomSearch] = useState('');
   const [showGuestDropdown, setShowGuestDropdown] = useState(false);
@@ -25,30 +25,40 @@ const ReservationModal = ({
 
   useEffect(() => {
     if (currentReservation) {
-      const currentGuest = guests.find(g => g.username === currentReservation.guest?.username);
-      setGuestSearch(currentGuest?.fullname || '');
+      const currentGuest = guests.find(g => g.username === currentReservation.guest?.username || g.username === currentReservation.guest);
+      setGuestSearch(currentGuest?.fullname || currentReservation.guest || '');
       
-      const currentRoom = rooms.find(r => r.roomID === currentReservation.room?.roomID);
-      setRoomSearch(currentRoom?.roomID || '');
+      const currentRoom = rooms.find(r => r.roomID === currentReservation.room?.roomID || r.roomID === currentReservation.room);
+      setRoomSearch(currentRoom?.roomID || currentReservation.room || '');
+      
+      // Set dates selected to true when editing an existing reservation
+      setDatesSelected(true);
+    } else {
+      // Reset fields for new reservation
+      setGuestSearch('');
+      setRoomSearch('');
+      setDatesSelected(false);
     }
   }, [currentReservation, guests, rooms]);
 
   const fetchAvailableRooms = async (checkIn, checkOut) => {
     try {
-      // Fixed API call to send parameters correctly
-      const response = await api.get(`/backend/hotel_admin/availableRooms/?checkin=${checkIn}&checkout=${checkOut}`);
+      const response = await api.get(`/backend/receptionist/availableRooms/?checkin=${checkIn}&checkout=${checkOut}`);
       
       let availableRoomsList = response.data || [];
       
-      // Make sure response data is an array to avoid filter errors
       if (!Array.isArray(availableRoomsList)) {
         availableRoomsList = [];
       }
       
       if (currentReservation && currentReservation.room) {
-        const currentRoomExists = availableRoomsList.some(room => room.roomID === currentReservation.room.roomID);
+        const roomId = typeof currentReservation.room === 'object' ? 
+          currentReservation.room.roomID : currentReservation.room;
+          
+        const currentRoomExists = availableRoomsList.some(room => room.roomID === roomId);
+        
         if (!currentRoomExists) {
-          const currentRoom = rooms.find(r => r.roomID === currentReservation.room.roomID);
+          const currentRoom = rooms.find(r => r.roomID === roomId);
           if (currentRoom) {
             availableRoomsList = [...availableRoomsList, currentRoom];
           }
@@ -58,7 +68,6 @@ const ReservationModal = ({
       setAvailableRooms(availableRoomsList);
     } catch (error) {
       console.error('Error fetching available rooms:', error);
-      // Fallback to showing all unoccupied rooms
       setAvailableRooms(Array.isArray(rooms) ? rooms.filter(room => !room.is_occupied) : []);
     }
   };
@@ -74,7 +83,6 @@ const ReservationModal = ({
         setNights(diffDays);
         setDatesSelected(true);
         
-        // Format dates as YYYY-MM-DD for API
         const formattedCheckIn = checkIn.toISOString().split('T')[0];
         const formattedCheckOut = checkOut.toISOString().split('T')[0];
         
@@ -202,6 +210,14 @@ const ReservationModal = ({
     handleSubmit(e);
   };
 
+  const handleCheckboxChange = (e) => {
+    const { name, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: checked
+    }));
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -280,7 +296,7 @@ const ReservationModal = ({
               <input
                 type="date"
                 name="check_in"
-                value={formData.check_in || ''}
+                value={formData.check_in?.split('T')[0] || ''}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
@@ -293,7 +309,7 @@ const ReservationModal = ({
               <input
                 type="date"
                 name="check_out"
-                value={formData.check_out || ''}
+                value={formData.check_out?.split('T')[0] || ''}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
@@ -364,6 +380,54 @@ const ReservationModal = ({
                 className="w-full px-3 py-2 bg-gray-100 border border-gray-300 text-gray-800 rounded-md"
                 disabled
               />
+            </div>
+
+            {/* Status Options - Added for both new and edit */}
+            <div className="md:col-span-2">
+              <label className="block text-gray-700 mb-2">Reservation Status</label>
+              <div className="flex flex-wrap gap-4">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="is_checked_in"
+                    name="is_checked_in"
+                    checked={formData.is_checked_in || false}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 text-amber-600 focus:ring-amber-500 rounded"
+                  />
+                  <label htmlFor="is_checked_in" className="ml-2 text-gray-700">
+                    Checked In
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="is_checked_out"
+                    name="is_checked_out"
+                    checked={formData.is_checked_out || false}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 text-amber-600 focus:ring-amber-500 rounded"
+                  />
+                  <label htmlFor="is_checked_out" className="ml-2 text-gray-700">
+                    Checked Out
+                  </label>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="is_cancelled"
+                    name="is_cancelled"
+                    checked={formData.is_cancelled || false}
+                    onChange={handleCheckboxChange}
+                    className="h-4 w-4 text-amber-600 focus:ring-amber-500 rounded"
+                  />
+                  <label htmlFor="is_cancelled" className="ml-2 text-gray-700">
+                    Cancelled
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 

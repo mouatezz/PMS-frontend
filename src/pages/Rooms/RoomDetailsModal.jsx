@@ -162,7 +162,8 @@ const RoomDetailsModal = ({ isOpen, onRequestClose, room, onEditClick, onDeleteC
                   {room.amenities.map((amenity, index) => (
                     <li key={index} className="text-gray-400 flex items-center">
                       <ChevronRight className="w-4 h-4 mr-1 text-amber-300" />
-                      {amenity}
+                      {/* Check if amenity is an array and display the name (second element) */}
+                      {Array.isArray(amenity) ? amenity[1] : amenity}
                     </li>
                   ))}
                 </ul>

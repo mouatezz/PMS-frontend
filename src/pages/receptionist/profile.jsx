@@ -28,16 +28,18 @@ const AdminProfile = () => {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append("image", backimage); 
-    formData.append("name", adminInfo.name);
+    if(backimage){
+    formData.append("image", backimage);} 
     formData.append("email", adminInfo.email);
     formData.append("fullname", adminInfo.fullname);
-
+    formData.append("phone", adminInfo.phone);
     try {
       const username = localStorage.getItem('username');
       for (let pair of formData.entries()) {
         console.log(`${pair[0]}:`, pair[1]);
       }
+      
+      console.log(formData);
       const response = await api.put(`/backend/hotel_admin/deleteusers/${username}/`, formData,
         {
           headers: {
@@ -54,7 +56,7 @@ const AdminProfile = () => {
 
   const getuserinfos = async (username) => {
     try {
-      console.log(username)
+      console.log('we are inside getuserinfo method ')
       const response = await api.get(`/backend/hotel_admin/deleteusers/${username}/`);
       console.log(response.data);
       setAdminInfo(response.data);

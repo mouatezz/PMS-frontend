@@ -51,7 +51,7 @@ useEffect(() => {
     try {
       const response = await api.get('/backend/hotel_admin/reservations/');
       console.log(response.data);
-      setRecentBookings(response.data);
+      setRecentBookings(response.data.slice(0, 6));
       
       const checkins = response.data.filter(reservation => reservation.is_checked_in).length;
       const bookings = response.data.length;

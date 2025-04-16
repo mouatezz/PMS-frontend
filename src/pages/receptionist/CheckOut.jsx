@@ -90,7 +90,7 @@ const CheckOutPage = () => {
   
 const fetchReservations = async () => {
   try{
-  const response = await api.get('backend/hotel_admin/checkouts/');
+  const response = await api.get('backend/receptionist/checkouts/');
   console.log(response.data);
     setcurrentguests(response.data);
   
@@ -101,14 +101,31 @@ const fetchReservations = async () => {
 }
 const processPayment = async () => {
    console.log(CheckOutInfos);
+   
+    
    try {
-    const response = await api.post('backend/hotel_admin/payment/', {
+    if(CheckOutInfos.payment.method === 'cash'){
+    const response = await api.post('backend/receptionist/payment/', {
       "amount" : CheckOutInfos.payment.amount,
       "payment_method" : CheckOutInfos.payment.method,
       "type" : CheckOutInfos.payment.type,
       "reservationID" : selectedReservation.reservationID,
    });
-   const reservationsResponse = await api.get('backend/hotel_admin/checkouts/');
+   console.log(response.data);
+  }else {
+    console.log('payment method is card ');
+    const response = await api.post('backend/receptionist/chargily/', {
+      "amount" : CheckOutInfos.payment.amount,
+      "payment_method" : CheckOutInfos.payment.method,
+      "type" : CheckOutInfos.payment.type,
+      "reservationID" : selectedReservation.reservationID,
+      "fullname": selectedReservation.guest.fullname ,
+      "email": selectedReservation.guest.email
+   })
+       console.log(response.data);
+  }
+    
+   const reservationsResponse = await api.get('backend/receptionist/checkouts/');
    setcurrentguests(reservationsResponse.data);
    
    const updatedReservation = reservationsResponse.data.find(
@@ -118,7 +135,7 @@ const processPayment = async () => {
    if (updatedReservation) {
      setSelectedReservation(updatedReservation);
    }
-    console.log(response.data);
+    
      (response.status === 200) 
     
   } catch (error) {
@@ -129,7 +146,7 @@ const processPayment = async () => {
 const processCheckOut = async () => {
   try { 
     console.log(`checking out RES${selectedReservation.reservationID}........`);
-    const response = await api.post('backend/hotel_admin/checkouts/', {"reservationID" :selectedReservation.reservationID});
+    const response = await api.post('backend/receptionist/checkouts/', {"reservationID" :selectedReservation.reservationID});
     console.log(response.data);
     fetchReservations();
     
@@ -202,7 +219,7 @@ const InvoiceByEmail1 = async () => {
     console.log('Attachment:', formData.get('attachment'));
     console.log('Attachment Name:', formData.get('attachment').name);
     console.log('Attachment Type:', formData.get('attachment').type);
-    const response = await api.post('backend/hotel_admin/send-invoice-email/', formData, {
+    const response = await api.post('backend/receptionist/send-invoice-email/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -284,7 +301,7 @@ const sendInvoiceByEmail = async () => {
       return;
     }
     
-    const response = await api.post('backend/hotel_admin/send-invoice-email/', formData, {
+    const response = await api.post('backend/receptionist/send-invoice-email/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

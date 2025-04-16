@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, Search, Filter, CheckCircle2, X } from 'lucide-react';
+import { UserPlus, Search, Filter, CheckCircle2, X, AlertCircle, Trash, Loader2 } from 'lucide-react';
 import Sidebar from '../../components/SideBar';
 import DataTable from '../../components/DataTable';
 import api from '../../api';
+
 const UsersPage = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -22,6 +23,11 @@ const UsersPage = () => {
     salary: '',
     rooms_responsible: []
   });
+
+  // Delete confirmation state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -78,19 +84,31 @@ const UsersPage = () => {
     fetchUsers()
   };
 
-  const handleDeleteUser = (username) => {
-    const deleteUser = async () => {
-      try {
-        console.log(username);
-        const response = await api.delete(`backend/hotel_admin/deleteusers/${username}/`
-        );
-        console.log(response.data);
-        setUsers(users.filter(user => user.username !== username));
-      }  catch (err) {
-        console.error(err);
-      }
-    };
-    deleteUser();
+  const handleDeleteUserClick = (username) => {
+    setUserToDelete(username);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const response = await api.delete(`backend/hotel_admin/deleteusers/${userToDelete}/`);
+      console.log(response.data);
+      setUsers(users.filter(user => user.username !== userToDelete));
+      setDeleteModalOpen(false);
+      setUserToDelete(null);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalOpen(false);
+    setUserToDelete(null);
   };
 
   const filteredUsers = users.filter(user => {
@@ -122,37 +140,37 @@ const UsersPage = () => {
 
     return matchesSearch && matchesRole;
   });
- /////////////////api/////////////
- const fetchUsers = async () => {
-  try {
-    const response = await api.get('backend/hotel_admin/users/');
-    console.log(response.data);
-    setUsers(response.data);
-    setLoading(false);
-  } catch (err) {
-    console.error(err);
-    setError('Failed to fetch users');
-    setLoading(false);
-  }
-};
-  useEffect(() => {
   
-
+  // API calls
+  const fetchUsers = async () => {
+    try {
+      const response = await api.get('backend/hotel_admin/users/');
+      console.log(response.data);
+      setUsers(response.data);
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setError('Failed to fetch users');
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     const fetchStaff = async () => {
       try {
         const response = await api.get('backend/hotel_admin/staff/');
         console.log(response.data);
         setStaff(response.data);
         setLoading(false);
-      }catch (err) {
+      } catch (err) {
         console.error(err);
         setError('Failed to fetch staffs');
         setLoading(false);
       }
-   
-  };
-  fetchUsers();
-  fetchStaff();
+    };
+    
+    fetchUsers();
+    fetchStaff();
   }, []);
 
   const userColumns = [
@@ -188,7 +206,7 @@ const UsersPage = () => {
     }
   ];
 
-  const staffColumns =[
+  const staffColumns = [
     {
       key: 'username',
       header: 'username',
@@ -235,8 +253,8 @@ const UsersPage = () => {
       renderCell: (staff) => staff.rooms_responsible.join(", "), 
       cellClassName: 'text-white'
     }
+  ];
 
-  ]
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex">
       <Sidebar
@@ -260,7 +278,7 @@ const UsersPage = () => {
           </div>
 
           <div className="flex border-b border-gray-700 mb-6">
-          <button
+            <button
               className={`py-2 px-4 font-medium ${activeTab === 'All' ? 'text-amber-300 border-b-2 border-amber-300' : 'text-gray-400 hover:text-white'}`}
               onClick={() => {
                 setActiveTab('All');
@@ -345,7 +363,7 @@ const UsersPage = () => {
             <DataTable 
               columns={activeTab === 'staff' ? staffColumns : userColumns}
               data={activeTab === 'staff' ? filteredStaff : filteredUsers}
-              onDelete={handleDeleteUser}
+              onDelete={handleDeleteUserClick}
               emptyMessage={`No ${activeTab} found matching your search criteria`}
             />
 
@@ -542,6 +560,53 @@ const UsersPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-75 flex items-center justify-center p-4">
+          <div className="bg-gray-800 rounded-md max-w-md w-full">
+            <div className="p-4 flex items-start">
+              <div className="flex-shrink-0 mr-4">
+                <AlertCircle className="h-6 w-6 text-red-500" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-medium text-white mb-2">Delete User</h3>
+                <p className="text-gray-300">
+                  Are you sure you want to delete <span className="font-medium text-amber-300">{userToDelete}</span>? 
+                  This action cannot be undone.
+                </p>
+                
+                <div className="mt-6 flex justify-end space-x-3">
+                  <button 
+                    onClick={cancelDelete}
+                    disabled={isDeleting}
+                    className="px-4 py-2 text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600 rounded-md"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={confirmDeleteUser}
+                    disabled={isDeleting}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md flex items-center"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        <span>Deleting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Trash className="h-4 w-4 mr-2" />
+                        <span>Delete</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

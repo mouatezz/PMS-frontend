@@ -4,7 +4,7 @@ import { CheckCircle, XCircle, Edit, Trash, Clock } from 'lucide-react';
 const ReservationTable = ({ 
   filteredReservations, 
   handleCheckIn, 
-  handleCancel, 
+  handleCancelReservation, 
   handleEditReservation, 
   handleDeleteReservation 
 }) => {
@@ -75,20 +75,20 @@ const ReservationTable = ({
                 )}
                 {!reservation.is_checked_in && !reservation.is_checked_out && (
                   <button 
-                    onClick={() => handleCancel(reservation.reservationID)}
+                    onClick={() => handleCancelReservation(reservation.reservationID)}
                     className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
                     title="Cancel"
                   >
                     <XCircle size={18} />
                   </button>
                 )}
-               {/*} <button 
+                <button 
                   onClick={() => handleEditReservation(reservation)}
                   className="p-2 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200 transition-colors"
                   title="Edit"
                 >
                   <Edit size={18} />
-                </button> */}
+                </button> 
                 <button 
                   onClick={() => handleDeleteReservation(reservation.reservationID)}
                   className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
