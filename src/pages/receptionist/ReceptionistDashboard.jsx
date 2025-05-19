@@ -63,6 +63,7 @@ const ReceptionistDashboard = () => {
             guest: r.guest,
             action: 'Checked In',
             room: r.room,
+            check_out : r.check_out,
             date: formatDate(r.check_in)
           }));
         setCurrentReservations(current);
@@ -159,11 +160,7 @@ const ReceptionistDashboard = () => {
         <header className="p-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-semibold text-gray-800">Receptionist Dashboard</h1>
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white font-medium">
-                R
-              </div>
-            </div>
+           
           </div>
         </header>
         
@@ -240,7 +237,7 @@ const ReceptionistDashboard = () => {
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
               <div className="space-y-3">
-                <a href="/receptionist/checkin" className="block bg-amber-50 hover:bg-amber-100 transition-colors text-amber-700 p-4 rounded-lg">
+                <a href="/receptionist/walkincheckin" className="block bg-amber-50 hover:bg-amber-100 transition-colors text-amber-700 p-4 rounded-lg">
                   <div className="flex items-center">
                     <UserPen className="h-6 w-6 mr-3"/>
                     <span className="font-medium">Create walk-in Check-in</span>

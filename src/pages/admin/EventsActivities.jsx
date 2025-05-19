@@ -290,7 +290,7 @@ const EventsActivities = () => {
                 const dateInfo = formatDate(event.date);
                 return (
                 <div key={event.id} className="bg-gray-700 rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-[1.02]">
-                  <div className="relative h-48 overflow-hidden">
+                  <div className="relative h-60 overflow-hidden">
                     <img 
                       src={event.imageUrl} 
                       alt={event.name} 

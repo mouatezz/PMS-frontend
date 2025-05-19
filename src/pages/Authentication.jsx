@@ -37,6 +37,8 @@ const Authentication = () => {
     e.preventDefault();
     setLoading(true);
   
+
+    
       try {
         const res = await api.post('/backend/token/', {
           username: formData.username,

@@ -266,7 +266,7 @@ const UsersPage = () => {
         <main className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-medium text-white">User Management</h1>
-            {activeTab === 'staff' && (
+            
               <button
                 onClick={() => setShowModal(true)}
                 className="bg-amber-300 hover:bg-amber-400 text-gray-900 font-medium py-2 px-4 rounded-md flex items-center"
@@ -274,7 +274,7 @@ const UsersPage = () => {
                 <UserPlus className="h-5 w-5 mr-2" />
                 <span>Add Staff</span>
               </button>
-            )}
+            
           </div>
 
           <div className="flex border-b border-gray-700 mb-6">

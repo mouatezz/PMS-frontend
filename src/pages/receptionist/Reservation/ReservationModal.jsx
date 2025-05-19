@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../../api';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, AlertCircle } from 'lucide-react';
+import CreateGuestModal from '../../../components/CreateGuestModal';
 
 const ReservationModal = ({
   isOpen,
@@ -11,7 +12,9 @@ const ReservationModal = ({
   handleInputChange,
   handleSubmit,
   rooms,
-  guests  }) => {
+  guests,
+  fetchGuests, // Add this prop to allow refreshing the guest list
+}) => {
   const [guestSearch, setGuestSearch] = useState('');
   const [roomSearch, setRoomSearch] = useState('');
   const [showGuestDropdown, setShowGuestDropdown] = useState(false);
@@ -22,7 +25,28 @@ const ReservationModal = ({
   const [availableRooms, setAvailableRooms] = useState([]);
   const [nights, setNights] = useState(0);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [isCurrentRoomUnavailable, setIsCurrentRoomUnavailable] = useState(false);
+  const [showCreateGuestModal, setShowCreateGuestModal] = useState(false);
 
+  const mealPlanOptions = [
+    { value: 'RO', label: 'Room Only' },
+    { value: 'BB', label: 'Bed & Breakfast' },
+    { value: 'HB', label: 'Half Board (Breakfast & Dinner)' },
+    { value: 'FB', label: 'Full Board (Breakfast, Lunch & Dinner)' },
+    { value: 'AI', label: 'All Inclusive' },
+  ];
+  
+  // Handler for the newly created guest
+  const handleGuestCreated = (newGuest) => {
+    // Update the form with the new guest info
+    handleInputChange({ target: { name: 'guest', value: newGuest.username } });
+    setGuestSearch(newGuest.fullname || newGuest.username);
+    setIsGuestValid(true);
+    
+    // Refresh guest list if needed
+    if (fetchGuests) fetchGuests();
+  };
+  
   useEffect(() => {
     if (currentReservation) {
       const currentGuest = guests.find(g => g.username === currentReservation.guest?.username || g.username === currentReservation.guest);
@@ -41,27 +65,60 @@ const ReservationModal = ({
     }
   }, [currentReservation, guests, rooms]);
 
+  
   const fetchAvailableRooms = async (checkIn, checkOut) => {
     try {
-      const response = await api.get(`/backend/receptionist/availableRooms/?checkin=${checkIn}&checkout=${checkOut}`);
-      
+      let url = `/backend/receptionist/availableRooms/?checkin=${checkIn}&checkout=${checkOut}`;
+      if (currentReservation) {
+        url += `&reservationID=${currentReservation.reservationID}`;
+      }
+      console.log(url);
+      const response = await api.get(url);
+      console.log(response.data);
       let availableRoomsList = response.data || [];
       
       if (!Array.isArray(availableRoomsList)) {
         availableRoomsList = [];
       }
       
+     
+      let currentRoomId = formData.room;
+      
       if (currentReservation && currentReservation.room) {
-        const roomId = typeof currentReservation.room === 'object' ? 
+        const reservationRoomId = typeof currentReservation.room === 'object' ? 
           currentReservation.room.roomID : currentReservation.room;
           
-        const currentRoomExists = availableRoomsList.some(room => room.roomID === roomId);
+        // Only use the reservation's room if formData.room isn't set yet or they're the same
+        if (!currentRoomId || currentRoomId === reservationRoomId) {
+          currentRoomId = reservationRoomId;
+        }
+      }
+      
+      // If we have a room selected, check if it's available in the new date range
+      if (currentRoomId) {
+        const currentRoomExists = availableRoomsList.some(room => room.roomID === currentRoomId);
+        
+        // If we're editing, check if these are the original dates
+        let isOriginalDateRange = true;
+        if (currentReservation) {
+          const originalCheckIn = new Date(currentReservation.check_in).toISOString().split('T')[0];
+          const originalCheckOut = new Date(currentReservation.check_out).toISOString().split('T')[0];
+          isOriginalDateRange = checkIn === originalCheckIn && checkOut === originalCheckOut;
+        }
         
         if (!currentRoomExists) {
-          const currentRoom = rooms.find(r => r.roomID === roomId);
-          if (currentRoom) {
-            availableRoomsList = [...availableRoomsList, currentRoom];
+          // Show warning only if dates have changed from original
+          setIsCurrentRoomUnavailable(!isOriginalDateRange);
+          
+          // If we're showing original dates, add the current room to available rooms
+          if (isOriginalDateRange) {
+            const currentRoom = rooms.find(r => r.roomID === currentRoomId);
+            if (currentRoom) {
+              availableRoomsList = [...availableRoomsList, currentRoom];
+            }
           }
+        } else {
+          setIsCurrentRoomUnavailable(false);
         }
       }
       
@@ -71,7 +128,7 @@ const ReservationModal = ({
       setAvailableRooms(Array.isArray(rooms) ? rooms.filter(room => !room.is_occupied) : []);
     }
   };
-
+   
   useEffect(() => {
     if (formData.check_in && formData.check_out) {
       const checkIn = new Date(formData.check_in);
@@ -94,7 +151,7 @@ const ReservationModal = ({
     } else {
       setDatesSelected(false);
     }
-  }, [formData.check_in, formData.check_out, currentReservation]);
+  }, [formData.check_in, formData.check_out]);
 
   useEffect(() => {
     if (formData.room && nights > 0 && rooms && rooms.length > 0) {
@@ -137,6 +194,8 @@ const ReservationModal = ({
     setIsRoomValid(true);
     setShowRoomDropdown(false);
     handleInputChange({ target: { name: 'room', value: room.roomID } });
+    // Reset the unavailable warning when selecting a new room
+    setIsCurrentRoomUnavailable(false);
   };
 
   const validateGuest = () => {
@@ -203,7 +262,8 @@ const ReservationModal = ({
       check_in: checkIn.toISOString().split('T')[0],
       check_out: checkOut.toISOString().split('T')[0],
       num_of_nights: nights,
-      total_price: totalPrice
+      total_price: totalPrice,
+      meal_plan: formData.meal_plan || 'RO'
     };
     
     setFormData(updatedFormData);
@@ -233,10 +293,31 @@ const ReservationModal = ({
             </svg>
           </button>
         </div>
-
+        
+        <div className="flex justify-end mb-4">
+          <button 
+            onClick={() => setShowCreateGuestModal(true)} 
+            className="px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-md text-sm font-medium flex items-center"
+          >
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Create New Guest
+          </button>
+        </div>
+        
+        {showCreateGuestModal && (
+          <CreateGuestModal 
+            isOpen={showCreateGuestModal}
+            onClose={() => setShowCreateGuestModal(false)}
+            onGuestCreated={() => fetchGuests()}
+            existingGuests={guests || []}
+          />
+        )}
+        
         <form onSubmit={handleFormSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            {/* Guest Selection (Searchable) */}
+           
             <div className="relative">
               <label className="block text-gray-700 mb-1">Guest</label>
               <input
@@ -327,7 +408,13 @@ const ReservationModal = ({
                   setShowRoomDropdown(true);
                 }}
                 onFocus={() => setShowRoomDropdown(true)}
-                onBlur={validateRoom}
+                onBlur={() => {
+                  // Use setTimeout to allow click events on dropdown to fire before hiding
+                  setTimeout(() => {
+                    setShowRoomDropdown(false);
+                    validateRoom();
+                  }, 200);
+                }}
                 className={`w-full px-3 py-2 border ${isRoomValid ? 'border-gray-300' : 'border-red-500'} 
                   text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500
                   ${!datesSelected ? 'bg-gray-200' : ''}`}
@@ -337,8 +424,14 @@ const ReservationModal = ({
               />
               {!isRoomValid && <p className="text-red-500 text-sm mt-1">ROOM UNDEFINED</p>}
               {!datesSelected && <p className="text-gray-500 text-sm mt-1">You must select dates first</p>}
+              {isCurrentRoomUnavailable && (
+                <div className="flex items-center mt-1 text-amber-700">
+                  <AlertCircle size={16} className="mr-1" />
+                  <p className="text-sm">Selected room is not available for these dates</p>
+                </div>
+              )}
               
-              {showRoomDropdown && roomSearch && datesSelected && availableRooms && availableRooms.length > 0 && (
+              {showRoomDropdown && datesSelected && availableRooms && availableRooms.length > 0 && (
                 <div className="absolute bg-white border border-gray-300 w-full mt-1 rounded-md shadow-lg z-10 max-h-48 overflow-y-auto">
                   {filteredRooms.length > 0 ? (
                     filteredRooms.map((room) => (
@@ -355,7 +448,7 @@ const ReservationModal = ({
                       </div>
                     ))
                   ) : (
-                    <div className="p-2 text-gray-500">No available rooms match your search</div>
+                    <div className="p-2 text-gray-500">No matching rooms found</div>
                   )}
                 </div>
               )}
@@ -380,6 +473,12 @@ const ReservationModal = ({
                 className="w-full px-3 py-2 bg-gray-100 border border-gray-300 text-gray-800 rounded-md"
                 disabled
               />
+            </div>
+            <div>
+              <label htmlFor="meal_plan" className="block text-gray-700 mb-1">Meal Plan</label>
+              <select id="meal_plan" name="meal_plan" value={formData.meal_plan || 'RO'} onChange={handleInputChange} className="w-full px-3 py-2 border border-gray-300 text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500">
+                {mealPlanOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
             </div>
 
             {/* Status Options - Added for both new and edit */}
@@ -443,11 +542,11 @@ const ReservationModal = ({
             <button
               type="submit"
               className={`px-4 py-2 ${
-                isGuestValid && isRoomValid && datesSelected 
+                isGuestValid && isRoomValid && datesSelected && !isCurrentRoomUnavailable
                   ? 'bg-amber-600 hover:bg-amber-700' 
                   : 'bg-amber-300 cursor-not-allowed'
               } text-white font-medium rounded-md transition duration-200`}
-              disabled={!isGuestValid || !isRoomValid || !datesSelected}
+              disabled={!isGuestValid || !isRoomValid || !datesSelected || isCurrentRoomUnavailable}
             >
               {currentReservation ? 'Update' : 'Create'} Reservation
             </button>

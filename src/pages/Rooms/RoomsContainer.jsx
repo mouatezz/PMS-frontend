@@ -123,14 +123,24 @@ const fetchrooms = async () => {
       <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : ''}`}>
         <div className="p-4 md:p-8">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <h1 className="text-2xl font-semibold text-white">Choose Room</h1>
+            <h1 className="text-2xl font-semibold text-white">Rooms</h1>
+            <div className='flex flex-row md:flex-row gap-4'>
             <button
               onClick={handleOpenAddModal}
               className="flex items-center px-4 py-2 bg-amber-300 text-gray-900 rounded-md hover:bg-amber-400 transition-colors w-full md:w-auto justify-center md:justify-start"
             >
               <Plus className="w-5 h-5 mr-2" />
-              Add New Room
+              Create New Room
             </button>
+             <button
+              onClick={handleOpenAddModal}
+              className="flex items-center px-4 py-2 bg-amber-300 text-gray-900 rounded-md hover:bg-amber-400 transition-colors w-full md:w-auto justify-center md:justify-start"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add Amenity
+            </button>
+            </div>
+            
           </div>
          <AddEditRoomModal
         isOpen={addEditModalIsOpen}

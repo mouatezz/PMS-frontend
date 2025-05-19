@@ -24,7 +24,7 @@ const RoomCard = ({ room, onClick }) => {
           <img 
             src={room.images && room.images.length > 0 ? room.images[0].image : '/api/placeholder/400/320'}
             alt={room.room_type}
-            className="w-full h-48 md:h-72 object-cover"
+            className="w-full h-48 md:h-80 object-cover"
           />
           <div className="absolute top-2 right-2 flex gap-2">
             {room.is_occupied && (

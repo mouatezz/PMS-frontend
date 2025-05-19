@@ -14,6 +14,9 @@ import CheckInPage from './pages/receptionist/CheckIn';
 import CheckOutPage from './pages/receptionist/CheckOut';
 import ReservationManagement from './pages/receptionist/Reservation/ReservationManagement';
 import Profile from './pages/receptionist/profile'; 
+import HotelManagement from './pages/admin/hotelManagement'
+import WalkInCheckInPage from './pages/receptionist/WalkInCheckInPage';
+import TimeOffRequestsPage from './pages/admin/TimeOffRequestPage';
 function App() {  
   const role = localStorage.getItem('role');
   return (
@@ -60,11 +63,27 @@ function App() {
             </ProtectedRoute>
           }
         />
+         <Route
+          path="/admin/timeoff"
+          element={
+            <ProtectedRoute role="admin">
+              <TimeOffRequestsPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/admin/rooms"
           element={
             <ProtectedRoute role="admin">
               <RoomsContainer />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/hotel"
+          element={
+            <ProtectedRoute role="admin">
+              <HotelManagement />
             </ProtectedRoute>
           }
         />
@@ -118,6 +137,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+         <Route
+          path="/receptionist/walkincheckin"
+          element={
+            <ProtectedRoute role="receptionist">
+              <WalkInCheckInPage />
+            </ProtectedRoute>
+          }
+        />
+        
         <Route
           path="/receptionist/checkout"
           element={

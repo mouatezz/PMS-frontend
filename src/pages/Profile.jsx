@@ -85,7 +85,6 @@ const [backimage , setbackimage]= useState(null)
         sidebarOpen={sidebarOpen} 
         setSidebarOpen={setSidebarOpen} 
       />
-
       <div className="flex-1 md:ml-64 ">
         <main className="h-screen flex flex-col">
           <div className="flex-1 bg-gray-900 overflow-y-auto">
@@ -100,7 +99,6 @@ const [backimage , setbackimage]= useState(null)
                           src={newimage || `http://127.0.0.1:8000${adminInfo.image}` } 
                             alt="Profile"
                             className="w-full h-full object-cover"
-                           
                           />
                         ) : (
                           <User className="h-16 w-16 text-gray-500" />

@@ -8,7 +8,8 @@ import {
   BarChart3, 
   Settings, 
   LogOut, PartyPopper,UserCircle,
-  BedDouble 
+  BedDouble, 
+  Hotel
 } from 'lucide-react';
 import {logout} from "../utils"
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
@@ -42,6 +43,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       icon: PartyPopper, 
       label: 'Events and Activities', 
       href: '/admin/events' 
+    },
+    { 
+      icon: Hotel, 
+      label: 'Hotel management ', 
+      href: '/admin/hotel' 
     }
   ];
 

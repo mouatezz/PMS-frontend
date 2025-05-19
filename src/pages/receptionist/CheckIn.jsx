@@ -7,6 +7,7 @@ import {
   Clipboard,
   CreditCard,
   Key,
+  CalendarDays,
   ClipboardCheck,
   Users,
   X,
@@ -14,7 +15,7 @@ import {
   BedDouble
 } from 'lucide-react';
 import api from '../../api';
-import { data } from 'react-router-dom';
+import { data, Navigate } from 'react-router-dom';
 import { set } from 'date-fns';
 import QRCodePopup from '../../components/QRCodePopup'
 const CheckInPage = () => {
@@ -217,7 +218,7 @@ const CheckInPage = () => {
                   <p className="text-gray-800 mb-4">Need to check in a guest without a reservation?</p>
                   <button 
                     className="bg-amber-100 hover:bg-amber-200 text-amber-700 py-3 px-6 rounded-lg flex items-center space-x-2 mx-auto transition-colors"
-                    onClick={() => setShowGuestForm(true)}
+                    onClick={() => Navigate("/receptionist/walkincheckin")}
                   >
                     <PlusCircle className="h-5 w-5" />
                     <span className="font-medium">Create Walk-in Check-in</span>
@@ -440,7 +441,7 @@ const CheckInPage = () => {
                            onClick={() => {
                              setPay(true);
                              setPayment({ ...payment, amount: selectedReservation?.total_price });
-                           }}> pay now ?
+                           }}> process payment
                             
                            </button>
                            </div>  
@@ -464,74 +465,30 @@ const CheckInPage = () => {
                   
                     </div>
                     </div>
-                    
-                    <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
-                    <h3 className="font-medium text-gray-800 mb-3 flex items-center">
-                      <Key className="h-5 w-5 mr-2 text-amber-500" />
-                      Room Access
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="flex items-center">
+
+                 <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                  <h3 className="font-medium text-amber-700 mb-3 flex items-center">
+                    <CalendarDays className="h-5 w-5 mr-2" />
+                    Reservation Status
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center">
                       <input 
-                        type="checkbox" 
-                        id="keycardIssued" 
                         className="w-4 h-4 text-amber-500 bg-white border-gray-300 rounded focus:ring-amber-400"
+                        type="checkbox"
+                        id="isCheckedIn"  
+                       
+                        checked={true}
                       />
-                      <label htmlFor="keycardIssued" className="ml-2 text-sm text-gray-700">
-                        Keycard Issued
+                      <label htmlFor="isCheckedIn" className="ml-2 text-sm text-gray-700">
+                        Mark as Checked In
                       </label>
-                      </div>
-                      <div className="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        id="doNotDisturb" 
-                        className="w-4 h-4 text-amber-500 bg-white border-gray-300 rounded focus:ring-amber-400"
-                      />
-                      <label htmlFor="doNotDisturb" className="ml-2 text-sm text-gray-700">
-                        Do Not Disturb
-                      </label>
-                      </div>
                     </div>
+                    <div className="text-sm text-gray-600 mt-4">
+                      <p>A walk-in reservation will be created and the guest will be immediately checked in.</p>
                     </div>
-                    
-                    <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
-                    <h3 className="font-medium text-amber-700 mb-3 flex items-center">
-                      <ClipboardCheck className="h-5 w-5 mr-2" />
-                      Check-in Checklist
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        id="idVerified" 
-                        className="w-4 h-4 text-amber-500 bg-white border-gray-300 rounded focus:ring-amber-400"
-                      />
-                      <label htmlFor="idVerified" className="ml-2 text-sm text-gray-700">
-                        ID Verified
-                      </label>
-                      </div>
-                      <div className="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        id="paymentCollected" 
-                        className="w-4 h-4 text-amber-500 bg-white border-gray-300 rounded focus:ring-amber-400"
-                      />
-                      <label htmlFor="paymentCollected" className="ml-2 text-sm text-gray-700">
-                        Payment Collected
-                      </label>
-                      </div>
-                      <div className="flex items-center">
-                      <input 
-                        type="checkbox" 
-                        id="is_checked_in" 
-                        className="w-4 h-4 text-amber-500 bg-white border-gray-300 rounded focus:ring-amber-400"
-                      />
-                      <label htmlFor="is_checked_in" className="ml-2 text-sm text-gray-700">
-                        Marked as Checked In
-                      </label>
-                      </div>
-                    </div>
-                    </div>
+                  </div>
+                </div>
                   </div>
                   </div>
                   

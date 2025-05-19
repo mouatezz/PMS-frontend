@@ -11,6 +11,13 @@ const Booking = () => {
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  // Pagination state
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 5
+  });
   const [newBooking, setNewBooking] = useState({
     room: '',
     NationalID: '',
@@ -89,7 +96,7 @@ const Booking = () => {
       guest: newBooking.guest,
       check_in: newBooking.checkInDate,
       check_out: newBooking.checkOutDate,
-      num_of_nights:numberOfNights,
+      num_of_nights: numberOfNights,
       total_price: newBooking.total_price || "0.00"
     };
     
@@ -103,16 +110,27 @@ const Booking = () => {
     });
     
     setShowModal(false);
-    addBooking(bookingData);
-    fetchBookings()
   };
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (page = 1) => {
     setLoading(true);
     try {
-      const response = await api.get('/backend/hotel_admin/reservations/');
+      const response = await api.get('/backend/receptionist/reservationPagination/', {
+        params: {
+          page: page,
+          limit: 10
+        }
+      });
+      
       console.log(response.data);
-      setRecentBookings(response.data);
+      // Ensure recentBookings is always an array
+      setRecentBookings(response.data.data || []);
+      setPagination({
+        currentPage: response.data.current_page,
+        totalPages: response.data.pages,
+        totalItems: response.data.total,
+        limit: 10
+      });
       setLoading(false);
     } catch (err) {
       console.error(err);
@@ -121,26 +139,48 @@ const Booking = () => {
     }
   };
 
-  const addBooking = async (bookingData) => {
-    setLoading(true);
-    try {
-      
-      console.log(bookingData)
-      const response = await api.post('/backend/hotel_admin/reservations/' , 
-       bookingData
-      );
-      console.log(response.data);
-      setLoading(false);
-    } catch (err) {
-      console.error(err);
-      setError('Failed to create reservation');
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= pagination.totalPages) {
+      fetchBookings(newPage);
+    }
+  };
+
+  const Pagination = () => {
+    const { currentPage, totalPages, totalItems, limit } = pagination;
+    const startItem = ((currentPage - 1) * limit) + 1;
+    const endItem = Math.min(currentPage * limit, totalItems);
+
+    return (
+      <div className="flex justify-between items-center mb-20 px-2">
+        <span className="text-base text-gray-400">
+          Showing {startItem} to {endItem} of {totalItems} reservations
+        </span>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1 || loading}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md transition duration-200 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed"
+          >
+            Previous
+          </button>
+          <span className="flex items-center px-4 font-medium text-white">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages || loading}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md transition duration-200 hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex-row">
@@ -152,162 +192,32 @@ const Booking = () => {
       <div className="flex-1 md:ml-64">
         <main className="p-6">
           <div className="flex-col items-center mb-6">
-            <h1 className="text-xl font-medium text-white">Bookings</h1>
-            <p className="ml-2 mt-2 font-thin text-gray-400">informations</p>
-          </div>
-          
-          <div className="flex justify-end mb-4">
-            <button 
-              onClick={() => setShowModal(true)}
-              className="flex items-center gap-2 bg-amber-300 hover:bg-amber-400 text-gray-900 px-4 py-2 rounded-md transition-colors"
-            >
-              <Plus size={16} />
-              <span>Add New Booking</span>
-            </button>
+            <h1 className="text-2xl font-semibold text-white">Bookings</h1>
+            <p className="ml-2 mt-2 font-normal text-gray-400">View booking informations</p>
           </div>
           
           <div className="bg-gray-800 rounded-md p-4 mb-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-white font-medium">Recent Bookings</h2>
-              <a href="#" className="text-amber-300 text-sm">View All</a>
+              <h2 className="text-white font-medium">All Bookings</h2>
+              {error && <p className="text-red-500">{error}</p>}
+              
+              
             </div>
             
-            <DataTable 
-              columns={bookingColumns} 
-              data={recentBookings} 
-            />
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              <DataTable 
+                columns={bookingColumns} 
+                data={recentBookings} 
+              />
+            )}
           </div>
+          <Pagination />
         </main>
       </div>
-      
-      {/* Modal / Popup for adding new booking */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg w-full max-w-md p-6 border border-gray-700 shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-medium text-white">Add New Booking</h3>
-              <button 
-                onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Room Number
-                  </label>
-                  <input 
-                    type="text" 
-                    name="room"
-                    value={newBooking.room}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Guest ID
-                  </label>
-                  <input 
-                    type="text" 
-                    name="NationalID"
-                    value={newBooking.NationalID}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Guest Name
-                  </label>
-                  <input 
-                    type="text" 
-                    name="guest"
-                    value={newBooking.guest}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Check In Date
-                  </label>
-                  <input 
-                    type="date" 
-                    name="checkInDate"
-                    value={newBooking.checkInDate}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Check Out Date
-                  </label>
-                  <input 
-                    type="date" 
-                    name="checkOutDate"
-                    value={newBooking.checkOutDate}
-                    onChange={handleInputChange}
-                    required
-                    className="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
-                    Total Price
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-400">$</span>
-                    </div>
-                    <input 
-                      type="number" 
-                      name="total_price"
-                      value={newBooking.total_price}
-                      onChange={handleInputChange}
-                      required
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      className="w-full bg-gray-700 border border-gray-600 rounded-md pl-8 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-amber-300"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-end gap-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-amber-300 text-gray-900 rounded-md hover:bg-amber-400"
-                >
-                  Create Booking
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

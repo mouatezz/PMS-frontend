@@ -379,14 +379,10 @@ useEffect(() => {
       />
       
       <div className="flex-1 md:ml-64">
-        <header className="bg-white shadow p-4">
+        <header className="  p-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-xl font-semibold text-gray-800">Check Out</h1>
-            <div className="flex items-center">
-              <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white font-medium">
-                R
-              </div>
-            </div>
+            <h1 className="text-2xl font-semibold text-gray-800">Check-Out page</h1>
+           
           </div>
         </header>
         
@@ -689,7 +685,7 @@ useEffect(() => {
                       </table>
                     </div>
                   </div>
-                  
+                  {/* 
                   <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
                     <h3 className="font-medium text-gray-800 mb-3 flex items-center">
                       <Star className="h-5 w-5 mr-2 text-amber-500" />
@@ -717,9 +713,9 @@ useEffect(() => {
                         ></textarea>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
-                
+                 
                 <div className="md:col-span-1">
                   <div className="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
                     <h3 className="font-medium text-gray-800 mb-3 flex items-center">
@@ -729,32 +725,32 @@ useEffect(() => {
                     <div className="space-y-2">
                       <div className="flex justify-between py-2 border-b border-gray-200">
                         <span className="text-gray-600">Room Charges</span>
-                        <span className="text-gray-800">${parseFloat(selectedReservation?.total_price || 0).toFixed(2)}</span>
+                        <span className="text-gray-800">{parseFloat(selectedReservation?.total_price || 0).toFixed(2)} DZD</span>
                       </div>
                       <div className="flex justify-between py-2 border-b border-gray-200">
                         <span className="text-gray-600">Service Charges</span>
                         <span className="text-gray-800">
-                          ${selectedReservation ? calculateTotalServiceCharges(selectedReservation.services).toFixed(2) : '0.00'}
+                          {selectedReservation ? calculateTotalServiceCharges(selectedReservation.services).toFixed(2) : '0.00'}
                         </span>
                       </div>
                       <div className="flex justify-between py-2 border-b border-gray-200">
                         <span className="text-gray-600">Subtotal</span>
                         <span className="text-gray-800">
-                          ${selectedReservation ? 
+                          {selectedReservation ? 
                             (parseFloat(selectedReservation.total_price || 0) + calculateTotalServiceCharges(selectedReservation.services)).toFixed(2) 
-                            : '0.00'}
+                            : '0.00'} DZD
                         </span>
                       </div>
                       <div className="flex justify-between py-2 border-b border-gray-200">
                         <span className="text-gray-600">Amount Paid</span>
                         <span className="text-gray-800">
-                          ${selectedReservation ? calculateTotalPayments(selectedReservation.payments).toFixed(2) : '0.00'}
+                          {selectedReservation ? calculateTotalPayments(selectedReservation.payments).toFixed(2) : '0.00'}DZD
                         </span>
                       </div>
                       <div className="flex justify-between py-2 font-medium">
                         <span className="text-gray-800">Balance Due</span>
                         <span className={`${calculateRemainingBalance(selectedReservation) > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                          ${Math.abs(calculateRemainingBalance(selectedReservation)).toFixed(2)}
+                          {Math.abs(calculateRemainingBalance(selectedReservation)).toFixed(2)} DZD
                         </span>
                       </div>
                     </div>
@@ -767,7 +763,7 @@ useEffect(() => {
                         Outstanding Balance
                       </h3>
                       <p className="text-sm text-gray-700 mb-3">
-                        The guest has an outstanding balance of ${calculateRemainingBalance(selectedReservation).toFixed(2)} that needs to be settled before check-out.
+                        The guest has an outstanding balance of {calculateRemainingBalance(selectedReservation).toFixed(2)} DZD that needs to be settled before check-out.
                       </p>
                       <div className="space-y-3">
                         <div>
@@ -790,66 +786,7 @@ useEffect(() => {
                     </div>
                   )}
                   
-                  <div className="bg-amber-50 rounded-lg p-4 border border-amber-100">
-                    <h3 className="font-medium text-amber-700 mb-3 flex items-center">
-                      <ClipboardCheck className="h-5 w-5 mr-2" />
-                      Check-out Checklist
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id="roomInspected" 
-                          className="w-4 h-4 text-amber-500 bg-white border-gray-300 rounded focus:ring-amber-400"
-                        />
-                        <label htmlFor="roomInspected" className="ml-2 text-sm text-gray-700">
-                          Room Inspected
-                        </label>
-                      </div>
-                      <div className="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id="minibarChecked" 
-                          className="w-4 h-4 text-amber-500 bg-white border-gray-300 rounded focus:ring-amber-400"
-                        />
-                        <label htmlFor="minibarChecked" className="ml-2 text-sm text-gray-700">
-                          Mini-bar Checked
-                        </label>
-                      </div>
-                      <div className="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id="keyReturned" 
-                          className="w-4 h-4 text-amber-500 bg-white border-gray-300 rounded focus:ring-amber-400"
-                        />
-                        <label htmlFor="keyReturned" className="ml-2 text-sm text-gray-700">
-                          Keycard Returned
-                        </label>
-                      </div>
-                      <div className="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id="billSettled" 
-                          className="w-4 h-4 text-amber-500 bg-white border-gray-300 rounded focus:ring-amber-400"
-                          checked={calculateRemainingBalance(selectedReservation) <= 0}
-                          readOnly
-                        />
-                        <label htmlFor="billSettled" className="ml-2 text-sm text-gray-700">
-                          Bill Settled
-                        </label>
-                      </div>
-                      <div className="flex items-center">
-                        <input 
-                          type="checkbox" 
-                          id="is_checked_out" 
-                          className="w-4 h-4 text-amber-500 bg-white border-gray-300 rounded focus:ring-amber-400"
-                        />
-                        <label htmlFor="is_checked_out" className="ml-2 text-sm text-gray-700">
-                          Marked as Checked Out
-                        </label>
-                      </div>
-                    </div>
-                  </div>
+                  
                 </div>
               </div>
               

@@ -18,7 +18,7 @@ const ReservationTable = ({
     } else {
       return <span className="px-2 py-1 text-xs rounded-full bg-amber-100 text-amber-600">Upcoming</span>;
     }
-  };
+};
 
   return (
     <div className="space-y-4">

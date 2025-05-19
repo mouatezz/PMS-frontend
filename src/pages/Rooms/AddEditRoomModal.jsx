@@ -30,7 +30,7 @@ const AddEditRoomModal = ({ isOpen, onRequestClose, selectedRoom, onAddRoom, onU
 
   const getamenities = async() =>{
     try{
-    const response =await api.get('/backend/hotel_admin/amenities/');
+    const response =await api.get('/backend/receptionist/amenities/');
     console.log(response.data);
     setAMENITIES(response.data);
     }catch(err){
